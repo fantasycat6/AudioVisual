@@ -1,221 +1,93 @@
-<div align="center">
+# AudioVisual Web — 视频解析平台
 
-# 🎬 AudioVisual
+> 从 [AudioVisual](https://github.com/RemotePinee/AudioVisual) Electron 桌面应用提取并重构为 Python Flask Web 版本。
 
-</div>
+## 功能特性
 
-<div align="center">
+- 🔐 **用户系统**：注册/登录/退出，支持记住登录
+- 🎯 **视频解析**：15个解析接口，支持腾讯/爱奇艺/优酷/B站/芒果TV
+- 🌍 **影视导航**：4个精选影视网站（新标签页打开，无CORS限制）
+- ⚙️ **管理后台**：用户管理、解析接口管理、导航管理
+- 🗄️ **双数据库支持**：默认 SQLite，可切换 MySQL
 
-![Version](https://img.shields.io/badge/version-1.0.9-blue.svg?style=for-the-badge&logo=semantic-release)
-![License](https://img.shields.io/badge/license-UNLICENSED-red.svg?style=for-the-badge)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=for-the-badge)
-![Electron](https://img.shields.io/badge/Electron-33+-47848F.svg?style=for-the-badge&logo=electron)
+## 快速启动
 
-**🔑 解锁所有媒体流的钥匙**
-
-*一个功能强大的视频解析工具，支持多平台视频网站*
-
-</div>
-
----
-
-## ⚠️ 重要声明
-
-> **本项目仅供学习交流使用，严禁用于任何商业用途。**  
-> 对于因使用本项目而产生的任何法律纠纷或责任，本人概不负责。
-
----
-
-## ✨ 功能特性
-
-- 🎯 **多平台支持** - 支持腾讯视频、爱奇艺、优酷、哔哩哔哩、芒果TV等主流视频平台
-- 🔧 **多解析接口** - 内置多个高质量解析接口，确保解析成功率
-- 🎨 **现代化界面** - 简洁美观的用户界面，支持主题切换
-- 🚀 **自动更新** - 内置自动更新功能，始终保持最新版本
-- 💻 **跨平台** - 基于Electron开发，支持Windows、macOS、Linux
-- 🛡️ **安全可靠** - 本地运行，保护用户隐私
-
----
-
-## 🚀 快速开始
-
-### 📋 系统要求
-
-- **Node.js** >= 16.0.0
-- **npm** >= 8.0.0
-- **操作系统**: Windows 10+, macOS 10.14+, Ubuntu 18.04+
-
-
-### 📦 安装步骤
-
-1. **克隆项目**
-   ```bash
-   git clone https://github.com/RemotePinee/AudioVisual.git
-   ```
-
-2. **进入目录**
-   ```bash
-   cd AudioVisual
-   ```
-
-3. **安装依赖**
-   ```bash
-   npm install
-   ```
-
-4. **启动应用**
-   ```bash
-   npm start
-   ```
-
----
-
-## 📖 使用指南
-
-### 🎮 基本操作
-
-1. **选择平台** - 从下拉菜单中选择目标视频平台
-2. **点击视频** - 在平台中选择任意视频
-3. **选择解析器** - 在左侧选择一个解析接口
-4. **开始解析** - 点击 **Parse!** 按钮进行注入解析
-
-### 🎭 美韩日剧模式
-
-- **互联网资源** - 美韩日剧模式下均是互联网搜集来的网站资源
-- **直接搜索** - 可以直接搜索剧名进行播放
-- **无需解析** - 该模式下无需额外的解析步骤，直接播放
-
-### 🔄 自动更新
-
-- 应用需要手动点击 **检查更新** 按钮来检查更新
-- 发现新版本时会提示用户选择是否下载
-- 支持后台下载和进度显示
-- 下载完成后提示用户安装更新
-
----
-
-## 🛠️ 开发相关
-
-### 📁 项目结构
-
-```
-AudioVisual/
-├── 📁 assets/           # 静态资源
-│   ├── 📁 css/         # 样式文件
-│   ├── 📁 fonts/       # 字体文件
-│   ├── 📁 images/      # 图片资源
-│   └── 📁 js/          # JavaScript文件
-├── 📄 main.js          # 主进程文件
-├── 📄 index.html       # 主页面
-├── 📄 package.json     # 项目配置
-└── 📄 README.md        # 项目文档
-```
-
-### 🔧 开发命令
+### 1. 安装依赖
 
 ```bash
-# 安装依赖
-npm install
+cd web_app
+pip install -r requirements.txt
 
-# 开发模式启动
-npm start
-
-# 构建应用
-npm run dist
+# 如果使用 MySQL，还需要：
+pip install PyMySQL
 ```
 
----
+### 2. 启动服务
 
-## 🤝 贡献指南
+```bash
+# 默认使用 SQLite，直接启动
+python app.py
 
-欢迎提交 Issue 和 Pull Request！
+# 指定端口
+PORT=8080 python app.py
 
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+# 使用 MySQL
+DB_TYPE=mysql MYSQL_HOST=localhost MYSQL_USER=root MYSQL_PASSWORD=xxx MYSQL_DB=audiovisual python app.py
+```
 
----
+### 3. 访问地址
 
-## 📝 更新日志
+打开浏览器访问：http://127.0.0.1:5000
 
-### v1.0.9 (最新)
-- ✨ **Premium 视觉重构**：引入全新自定义 Tooltip 与毛玻璃质感 Modal，彻底告别原生 UI
-- 🚀 **核心稳定性修复**：解决 `MutationObserver` 死循环导致的启动卡死（重要）
-- 📐 **侧边栏布局优化**：引入宽度补偿机制，完美适配各种缩放比例
-- 🔄 **同步逻辑修复**：解决模式切换时地址栏 URL 与站点不同步的问题
+**首次注册的用户自动成为管理员。**
 
-### v1.0.8
-- 🐛 修复爱奇艺黑屏问题
-- ✨ 添加窗口自适应
+## 目录结构
 
-### v1.0.7
-- 🔧 升级Electron到v33.0.0，支持最新Windows 25H2系统
-- 🛠️ 更新electron-builder到v25.1.8，提升构建稳定性
-- 🐛 修复Windows应用在新版本系统上无法运行的问题
-- 🍎 优化macOS构建配置，支持Intel和Apple Silicon双架构
-- ⚡ 改进构建流程，提升应用兼容性和性能
+```
+web_app/
+├── app.py              # Flask 应用入口
+├── config.py           # 配置（SQLite/MySQL切换）
+├── models.py           # 数据库模型
+├── auth.py             # 认证蓝图（登录/注册/退出）
+├── routes.py           # 主要路由（首页/解析/影视）
+├── admin.py            # 管理后台蓝图
+├── requirements.txt    # Python 依赖
+├── .env.example        # 环境变量示例
+├── templates/
+│   ├── base.html           # 基础布局
+│   ├── auth/
+│   │   ├── login.html      # 登录页
+│   │   └── register.html   # 注册页
+│   ├── main/
+│   │   ├── index.html      # 视频解析主页
+│   │   ├── drama.html      # 影视导航
+│   │   └── player.html     # 播放器页
+│   └── admin/
+│       ├── index.html      # 管理后台首页
+│       ├── users.html      # 用户管理
+│       ├── apis.html       # 解析接口管理
+│       └── drama_sites.html # 影视导航管理
+└── static/
+    ├── css/
+    │   ├── style.css   # 全局样式
+    │   └── auth.css    # 认证页样式
+    └── js/
+        └── main.js     # 全局 JS
+```
 
-### v1.0.6
-- 🐛 修复爱奇艺解析失败问题
-- 🐛 修复芒果解析失败问题
-- 🔧 优化解析逻辑，提升解析成功率
-- ✨ 新增自动识别解析功能
+## 与原版区别
 
-### v1.0.5
-- 🐛 修复窗口最小化后网站内容消失的问题
-- 🔧 优化窗口恢复逻辑，提升用户体验
-- 📦 更新构建配置，支持所有平台使用512x512图标
+| 功能 | 原版（Electron） | Web版（Flask） |
+|------|-----------------|----------------|
+| 视频解析 | 内嵌 BrowserView | iframe 嵌入解析接口 |
+| 影视导航 | 内置浏览器直接访问 | 新标签页打开（无CORS限制）|
+| 数据存储 | localStorage | SQLite / MySQL |
+| 用户管理 | 无 | 注册/登录/管理员 |
+| 部署方式 | 桌面安装包 | Web服务，局域网/公网 |
 
-### v1.0.4
-- ✨ 优化操作逻辑，提升用户体验
-- 🚀 添加缓存机制，提高应用性能
-- 🔧 修复更新通道，确保更新功能正常
-- 🐛 修复优酷点击不显示解析页面的问题
-- 💄 改进用户界面体验
+## 注意事项
 
-### v1.0.3
-- 🔧 修复IPC通信问题
-- 📱 增加窗口高度
-- 🎨 调整通知位置
----
-
-## 📈 Star History
-
-<a href="https://www.star-history.com/?repos=RemotePinee%2FAudioVisual&type=date&logscale=&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=RemotePinee/AudioVisual&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=RemotePinee/AudioVisual&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=RemotePinee/AudioVisual&type=date&legend=top-left" />
- </picture>
-</a>
-
----
-
-
-## ☕ 赞赏支持
-
-如果这个项目对你有帮助，可以请我喝杯咖啡！
-
-<div align="center">
-  <img src="assets/images/zf.jpg" alt="赞赏码" width="300" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
-  
-  *扫码支持开发者* ❤️
-</div>
-
----
-
-## 📄 许可证
-
-本项目采用 UNLICENSED 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
----
-
-<div align="center">
-
-**⭐ 如果觉得项目不错，请给个Star支持一下！**
-
-Made with ❤️ by [RemotePinee](https://github.com/RemotePinee)
-
-</div>
+- 视频解析页面使用 iframe 加载解析接口，部分接口可能有广告
+- 影视导航采用新标签页方式打开，避免 CORS/X-Frame-Options 限制
+- 生产部署建议修改 `SECRET_KEY` 为随机字符串
+- 本项目仅供学习研究，所有资源来自互联网

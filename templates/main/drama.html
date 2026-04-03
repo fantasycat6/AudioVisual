@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}影视导航{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h2 class="page-title">
+                🌍 影视导航
+            </h2>
+            <p class="page-desc">精选美日韩剧影视网站，一键直达</p>
+        </div>
+    </div>
+
+    <!-- 影视导航卡片 -->
+    <div class="drama-grid">
+        {% for site in sites %}
+        <div class="drama-card">
+            <div class="drama-card-inner">
+                <div class="drama-icon">{{ site.icon }}</div>
+                <div class="drama-info">
+                    <h3 class="drama-name">{{ site.name }}</h3>
+                    {% if site.description %}
+                    <p class="drama-desc">{{ site.description }}</p>
+                    {% endif %}
+                    <div class="drama-url">{{ site.url }}</div>
+                </div>
+                <div class="drama-actions">
+                    <a href="{{ site.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm drama-visit-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                        访问
+                    </a>
+                    <button class="btn btn-ghost btn-sm" onclick="copyUrl('{{ site.url }}')" title="复制链接">
+                        📋 复制
+                    </button>
+                </div>
+            </div>
+            <div class="drama-card-glow"></div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🎬</div>
+            <h3>暂无影视导航</h3>
+            <p>管理员可以在后台添加影视网站</p>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.drama_sites') }}" class="btn btn-primary">前往管理</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 免责声明 -->
+    <div class="disclaimer-card">
+        <h4>📋 免责声明</h4>
+        <p>本站为开源项目，所有资源均来源于互联网，本项目只做整合导航。如有侵权请联系：
+            <a href="mailto:fenghaoran60@gmail.com">fenghaoran60@gmail.com</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function copyUrl(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('链接已复制', 'success');
+    }).catch(() => {
+        showToast('复制失败，请手动复制', 'error');
+    });
+}
+</script>
+{% endblock %}

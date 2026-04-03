@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}影视导航管理{% endblock %}
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <a href="{{ url_for('admin.index') }}" class="back-link">← 管理后台</a>
+            <h2 class="page-title">🎬 影视导航管理</h2>
+        </div>
+        <div class="page-header-right">
+            <button class="btn btn-primary" onclick="showAddModal()">+ 添加网站</button>
+        </div>
+    </div>
+
+    <div class="data-card">
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>图标</th>
+                        <th>名称</th>
+                        <th>网址</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for site in sites %}
+                    <tr id="site-row-{{ site.id }}">
+                        <td class="icon-cell">{{ site.icon }}</td>
+                        <td><strong>{{ site.name }}</strong></td>
+                        <td class="url-cell">
+                            <a href="{{ site.url }}" target="_blank" class="url-link">{{ site.url }}</a>
+                        </td>
+                        <td class="desc-cell">{{ site.description or '-' }}</td>
+                        <td>
+                            <span class="status-badge {% if site.is_enabled %}status-on{% else %}status-off{% endif %}"
+                                  id="site-status-{{ site.id }}">
+                                {% if site.is_enabled %}● 启用{% else %}○ 禁用{% endif %}
+                            </span>
+                        </td>
+                        <td class="action-cell">
+                            <button class="btn btn-ghost btn-xs" onclick="toggleSite({{ site.id }})">切换</button>
+                            <button class="btn btn-ghost btn-xs" onclick="showEditModal({{ site.id }}, '{{ site.name }}', '{{ site.url }}', '{{ site.description or '' }}', '{{ site.icon }}')">编辑</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteSite({{ site.id }})">删除</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗 -->
+<div id="site-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modal-title">添加影视网站</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="edit-site-id">
+            <div class="form-group">
+                <label>图标 Emoji</label>
+                <input type="text" id="site-icon" class="form-input" placeholder="🎬" maxlength="4">
+            </div>
+            <div class="form-group">
+                <label>网站名称</label>
+                <input type="text" id="site-name" class="form-input" placeholder="如：猴影工坊">
+            </div>
+            <div class="form-group">
+                <label>网站地址</label>
+                <input type="text" id="site-url" class="form-input" placeholder="https://example.com/">
+            </div>
+            <div class="form-group">
+                <label>描述（可选）</label>
+                <input type="text" id="site-desc" class="form-input" placeholder="简短描述该网站">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveSite()">保存</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let editingSiteId = null;
+
+function showAddModal() {
+    editingSiteId = null;
+    document.getElementById('modal-title').textContent = '添加影视网站';
+    document.getElementById('site-icon').value = '🎬';
+    document.getElementById('site-name').value = '';
+    document.getElementById('site-url').value = '';
+    document.getElementById('site-desc').value = '';
+    document.getElementById('site-modal').style.display = 'flex';
+}
+
+function showEditModal(id, name, url, desc, icon) {
+    editingSiteId = id;
+    document.getElementById('modal-title').textContent = '编辑影视网站';
+    document.getElementById('site-icon').value = icon;
+    document.getElementById('site-name').value = name;
+    document.getElementById('site-url').value = url;
+    document.getElementById('site-desc').value = desc;
+    document.getElementById('site-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('site-modal').style.display = 'none';
+    editingSiteId = null;
+}
+
+function saveSite() {
+    const name = document.getElementById('site-name').value.trim();
+    const url = document.getElementById('site-url').value.trim();
+    const desc = document.getElementById('site-desc').value.trim();
+    const icon = document.getElementById('site-icon').value.trim() || '🎬';
+    if (!name || !url) { showToast('名称和地址不能为空', 'error'); return; }
+
+    if (editingSiteId) {
+        fetch(`/admin/drama-sites/${editingSiteId}/edit`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, url, description: desc, icon})
+        }).then(r => r.json()).then(data => {
+            if (data.success) { showToast('已更新', 'success'); closeModal(); location.reload(); }
+            else showToast(data.message, 'error');
+        });
+    } else {
+        fetch('/admin/drama-sites/add', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, url, description: desc, icon})
+        }).then(r => r.json()).then(data => {
+            if (data.success) { showToast('已添加', 'success'); closeModal(); location.reload(); }
+            else showToast(data.message, 'error');
+        });
+    }
+}
+
+function toggleSite(id) {
+    fetch(`/admin/drama-sites/${id}/toggle`, {method: 'POST'})
+        .then(r => r.json()).then(data => {
+            if (data.success) {
+                const badge = document.getElementById(`site-status-${id}`);
+                badge.className = `status-badge ${data.is_enabled ? 'status-on' : 'status-off'}`;
+                badge.textContent = data.is_enabled ? '● 启用' : '○ 禁用';
+            }
+        });
+}
+
+function deleteSite(id) {
+    if (!confirm('确定要删除此影视导航吗？')) return;
+    fetch(`/admin/drama-sites/${id}/delete`, {method: 'DELETE'})
+        .then(r => r.json()).then(data => {
+            if (data.success) {
+                document.getElementById(`site-row-${id}`).remove();
+                showToast('已删除', 'success');
+            }
+        });
+}
+</script>
+{% endblock %}

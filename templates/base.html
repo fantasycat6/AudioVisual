@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AudioVisual{% endblock %} - 视频解析平台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.index') }}" class="nav-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+                AudioVisual
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
+                    🎯 视频解析
+                </a>
+                <a href="{{ url_for('main.drama') }}" class="nav-link {% if request.endpoint == 'main.drama' %}active{% endif %}">
+                    🌍 影视导航
+                </a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.index') }}" class="nav-link {% if request.endpoint and 'admin.' in request.endpoint %}active{% endif %}">
+                    ⚙️ 管理后台
+                </a>
+                {% endif %}
+            </div>
+            <div class="nav-user">
+                <span class="user-badge">
+                    {% if current_user.is_admin %}👑{% else %}👤{% endif %}
+                    {{ current_user.username }}
+                </span>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">退出</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash 消息 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-msg flash-{{ category }}">
+            {{ message }}
+            <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- 主内容 -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>AudioVisual Web &copy; 2026 &nbsp;|&nbsp;
+            <a href="https://github.com/RemotePinee/AudioVisual" target="_blank">GitHub</a>
+            &nbsp;|&nbsp; 免责声明：本站所有资源来自互联网，仅供学习参考
+        </p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

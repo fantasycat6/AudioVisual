@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}管理后台{% endblock %}
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h2 class="page-title">⚙️ 管理后台</h2>
+            <p class="page-desc">系统数据管理中心</p>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ user_count }}</div>
+                <div class="stat-label">注册用户</div>
+            </div>
+            <a href="{{ url_for('admin.users') }}" class="stat-link">管理 →</a>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔗</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ api_count }}</div>
+                <div class="stat-label">解析接口</div>
+            </div>
+            <a href="{{ url_for('admin.apis') }}" class="stat-link">管理 →</a>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎬</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ site_count }}</div>
+                <div class="stat-label">影视导航</div>
+            </div>
+            <a href="{{ url_for('admin.drama_sites') }}" class="stat-link">管理 →</a>
+        </div>
+    </div>
+
+    <!-- 快速入口 -->
+    <div class="admin-nav-cards">
+        <a href="{{ url_for('admin.users') }}" class="admin-nav-card">
+            <div class="anc-icon">👥</div>
+            <div class="anc-title">用户管理</div>
+            <div class="anc-desc">查看、重置密码、授权管理员</div>
+        </a>
+        <a href="{{ url_for('admin.apis') }}" class="admin-nav-card">
+            <div class="anc-icon">🔗</div>
+            <div class="anc-title">解析接口管理</div>
+            <div class="anc-desc">添加、编辑、启用/禁用、拖动排序</div>
+        </a>
+        <a href="{{ url_for('admin.drama_sites') }}" class="admin-nav-card">
+            <div class="anc-icon">🎬</div>
+            <div class="anc-title">影视导航管理</div>
+            <div class="anc-desc">管理影视导航网站列表</div>
+        </a>
+    </div>
+
+    <!-- 数据备份与恢复 -->
+    <div class="data-card" style="margin-top:24px;">
+        <div class="backup-section">
+            <div class="backup-header">
+                <div class="backup-title-row">
+                    <span class="backup-icon">💾</span>
+                    <div>
+                        <h3 class="backup-title">数据备份与导入</h3>
+                        <p class="backup-desc">将解析接口和影视导航数据导出为 JSON 文件，或从备份文件恢复数据。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="backup-actions">
+                <!-- 导出 -->
+                <div class="backup-block">
+                    <h4 class="backup-block-title">📤 导出备份</h4>
+                    <p class="backup-block-desc">将当前所有解析接口和影视导航数据导出为 JSON 文件，可用于迁移或备份。</p>
+                    <a href="{{ url_for('admin.export_backup') }}" class="btn btn-primary">
+                        下载备份文件
+                    </a>
+                </div>
+
+                <div class="backup-divider"></div>
+
+                <!-- 导入 -->
+                <div class="backup-block">
+                    <h4 class="backup-block-title">📥 导入备份</h4>
+                    <p class="backup-block-desc">从备份 JSON 文件恢复数据。</p>
+
+                    <div class="import-mode-row">
+                        <label class="radio-label">
+                            <input type="radio" name="import-mode" value="merge" checked>
+                            <span>合并导入</span>
+                            <small>（跳过已有 URL，仅添加新数据）</small>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="import-mode" value="overwrite">
+                            <span>覆盖导入</span>
+                            <small>（清空现有数据后全量导入，不可逆！）</small>
+                        </label>
+                    </div>
+
+                    <div class="import-file-row">
+                        <label class="file-input-label" for="backup-file-input">
+                            <span id="file-name-display">选择 .json 文件…</span>
+                        </label>
+                        <input type="file" id="backup-file-input" accept=".json" style="display:none"
+                               onchange="document.getElementById('file-name-display').textContent = this.files[0]?.name || '选择 .json 文件…'">
+                        <button class="btn btn-primary" onclick="doImport()">开始导入</button>
+                    </div>
+                    <div id="import-result" style="display:none;margin-top:10px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function doImport() {
+    const file = document.getElementById('backup-file-input').files[0];
+    if (!file) { showToast('请先选择备份文件', 'error'); return; }
+    const mode = document.querySelector('input[name="import-mode"]:checked').value;
+    if (mode === 'overwrite' && !confirm('⚠️ 覆盖导入将清空所有现有数据，确定继续？')) return;
+
+    const fd = new FormData();
+    fd.append('backup_file', file);
+    fd.append('mode', mode);
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '导入中…';
+
+    fetch('/admin/backup/import', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '开始导入';
+            const resultEl = document.getElementById('import-result');
+            resultEl.style.display = 'block';
+            if (data.success) {
+                resultEl.className = 'import-result-ok';
+                resultEl.textContent = '✅ ' + data.message;
+                showToast(data.message, 'success');
+            } else {
+                resultEl.className = 'import-result-err';
+                resultEl.textContent = '❌ ' + data.message;
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(e => {
+            btn.disabled = false;
+            btn.textContent = '开始导入';
+            showToast('网络错误：' + e.message, 'error');
+        });
+}
+</script>
+{% endblock %}

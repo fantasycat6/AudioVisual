@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - AudioVisual</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+                <h1>AudioVisual</h1>
+                <p>视频解析平台</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="auth-alert auth-alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div id="auth-error" class="auth-alert auth-alert-error" style="display:none;"></div>
+
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="username">用户名 / 邮箱</label>
+                    <input type="text" id="username" name="username" class="form-input"
+                           placeholder="请输入用户名或邮箱" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" class="form-input"
+                               placeholder="请输入密码" required autocomplete="current-password">
+                        <button type="button" class="eye-toggle" onclick="togglePassword('password')">👁</button>
+                    </div>
+                </div>
+                <div class="form-group form-check">
+                    <label class="check-label">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span class="checkmark"></span>
+                        记住我（7天内免登录）
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+                    <span class="btn-text">登 录</span>
+                    <span class="btn-loading" style="display:none;">登录中...</span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>还没有账号？<a href="{{ url_for('auth.register') }}" class="auth-link">立即注册</a></p>
+            </div>
+        </div>
+
+        <div class="auth-bg-decor"></div>
+    </div>
+
+    <script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('login-btn');
+        const errDiv = document.getElementById('auth-error');
+        btn.querySelector('.btn-text').style.display = 'none';
+        btn.querySelector('.btn-loading').style.display = 'inline';
+        btn.disabled = true;
+        errDiv.style.display = 'none';
+
+        const data = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+            remember: document.getElementById('remember').checked
+        };
+
+        try {
+            const res = await fetch('{{ url_for("auth.login") }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                window.location.href = result.redirect;
+            } else {
+                errDiv.textContent = result.message;
+                errDiv.style.display = 'block';
+            }
+        } catch(err) {
+            errDiv.textContent = '网络错误，请稍后重试';
+            errDiv.style.display = 'block';
+        } finally {
+            btn.querySelector('.btn-text').style.display = 'inline';
+            btn.querySelector('.btn-loading').style.display = 'none';
+            btn.disabled = false;
+        }
+    });
+    </script>
+</body>
+</html>

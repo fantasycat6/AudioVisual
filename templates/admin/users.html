@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}用户管理{% endblock %}
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <a href="{{ url_for('admin.index') }}" class="back-link">← 管理后台</a>
+            <h2 class="page-title">👥 用户管理</h2>
+        </div>
+    </div>
+
+    <div class="data-card">
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>角色</th>
+                        <th>注册时间</th>
+                        <th>最后登录</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr id="user-row-{{ user.id }}">
+                        <td>{{ user.id }}</td>
+                        <td>
+                            <span class="user-name">{{ user.username }}</span>
+                            {% if user.id == current_user.id %}
+                            <span class="badge badge-info">我</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge {% if user.is_admin %}badge-warning{% else %}badge-default{% endif %}" id="role-badge-{{ user.id }}">
+                                {% if user.is_admin %}👑 管理员{% else %}👤 用户{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
+                        <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '从未' }}</td>
+                        <td class="action-cell">
+                            {% if user.id != current_user.id %}
+                            <button class="btn btn-ghost btn-xs" onclick="toggleAdmin({{ user.id }})">切换管理员</button>
+                            <button class="btn btn-ghost btn-xs" onclick="showResetModal({{ user.id }}, '{{ user.username }}')">重置密码</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">删除</button>
+                            {% else %}
+                            <span class="muted-text">（当前用户）</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 重置密码弹窗 -->
+<div id="reset-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>重置密码</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <p id="reset-modal-desc">为用户重置密码</p>
+            <div class="form-group">
+                <label>新密码（至少6个字符）</label>
+                <input type="password" id="new-password" class="form-input" placeholder="输入新密码">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" onclick="confirmReset()">确认重置</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentResetUserId = null;
+
+function toggleAdmin(userId) {
+    if (!confirm('确定要切换该用户的管理员状态吗？')) return;
+    fetch(`/admin/users/${userId}/toggle-admin`, {method: 'POST'})
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById(`role-badge-${userId}`);
+                badge.className = `badge ${data.is_admin ? 'badge-warning' : 'badge-default'}`;
+                badge.textContent = data.is_admin ? '👑 管理员' : '👤 用户';
+                showToast('角色已更新', 'success');
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+}
+
+function showResetModal(userId, username) {
+    currentResetUserId = userId;
+    document.getElementById('reset-modal-desc').textContent = `为用户 "${username}" 重置密码`;
+    document.getElementById('new-password').value = '';
+    document.getElementById('reset-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('reset-modal').style.display = 'none';
+    currentResetUserId = null;
+}
+
+function confirmReset() {
+    const password = document.getElementById('new-password').value;
+    if (!password || password.length < 6) {
+        showToast('密码至少需要6个字符', 'error');
+        return;
+    }
+    fetch(`/admin/users/${currentResetUserId}/reset-password`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password})
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            showToast('密码已重置', 'success');
+            closeModal();
+        } else {
+            showToast(data.message, 'error');
+        }
+    });
+}
+
+function deleteUser(userId, username) {
+    if (!confirm(`确定要删除用户 "${username}" 吗？此操作不可撤销！`)) return;
+    fetch(`/admin/users/${userId}/delete`, {method: 'DELETE'})
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`user-row-${userId}`).remove();
+                showToast('用户已删除', 'success');
+            } else {
+                showToast(data.message, 'error');
+            }
+        });
+}
+</script>
+{% endblock %}

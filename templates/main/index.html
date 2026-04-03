@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}视频解析{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- 页面头部 -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h2 class="page-title">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+                视频解析
+            </h2>
+            <p class="page-desc">粘贴视频链接，选择解析接口，立即播放</p>
+        </div>
+    </div>
+
+    <!-- 解析控制区 -->
+    <div class="parse-card">
+        <div class="parse-input-area">
+            <div class="url-input-group">
+                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/>
+                </svg>
+                <input type="text" id="video-url-input" class="url-input"
+                       placeholder="请粘贴视频链接（支持腾讯、爱奇艺、优酷、B站、芒果TV等）">
+                <button id="clear-btn" class="clear-btn" onclick="clearUrl()" title="清空">✕</button>
+            </div>
+
+            <div class="api-select-group">
+                <label class="select-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    解析接口
+                </label>
+                <select id="api-select" class="api-select">
+                    {% for api in apis %}
+                    <option value="{{ api.id }}" data-url="{{ api.url }}">{{ api.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button id="parse-btn" class="btn btn-parse" onclick="triggerParse()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                P A R S E !
+            </button>
+        </div>
+
+        <!-- 提示信息 -->
+        <div class="parse-tips">
+            <div class="tip-item">
+                <span class="tip-icon">💡</span>
+                <span><strong>解析失败？</strong> 换一个解析接口再试</span>
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">📢</span>
+                <span><strong>有广告？</strong> 部分接口含广告，请耐心等待或更换接口</span>
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">🔒</span>
+                <span><strong>安全提示：</strong> 请勿在解析页面输入个人信息</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 播放器区域（动态显示） -->
+    <div id="player-container" class="player-container" style="display:none;">
+        <div class="player-toolbar">
+            <div class="player-info">
+                <span id="playing-api-name" class="playing-badge"></span>
+                <span id="playing-url" class="playing-url"></span>
+            </div>
+            <div class="player-actions">
+                <button class="btn btn-ghost btn-sm" onclick="changeApi(-1)" title="上一个接口">◀ 上一个</button>
+                <button class="btn btn-ghost btn-sm" onclick="changeApi(1)" title="下一个接口">下一个 ▶</button>
+                <button class="btn btn-ghost btn-sm" onclick="closePlayer()">✕ 关闭</button>
+            </div>
+        </div>
+        <div class="iframe-wrapper">
+            <div id="player-loading" class="player-loading">
+                <div class="spinner"></div>
+                <p>正在连接解析接口...</p>
+            </div>
+            <iframe id="video-iframe" class="video-iframe" allowfullscreen
+                    allow="autoplay; fullscreen; encrypted-media" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"></iframe>
+        </div>
+    </div>
+
+    <!-- 快速平台导航 -->
+    <div class="platforms-section">
+        <h3 class="section-title">📺 常用平台</h3>
+        <div class="platforms-grid">
+            <div class="platform-card" onclick="setPlatformUrl('https://v.qq.com')">
+                <div class="platform-icon" style="color:#ff6668;">▶</div>
+                <div class="platform-name">腾讯视频</div>
+            </div>
+            <div class="platform-card" onclick="setPlatformUrl('https://www.iqiyi.com')">
+                <div class="platform-icon" style="color:#00c06f;">🎬</div>
+                <div class="platform-name">爱奇艺</div>
+            </div>
+            <div class="platform-card" onclick="setPlatformUrl('https://www.youku.com')">
+                <div class="platform-icon" style="color:#0066ff;">▷</div>
+                <div class="platform-name">优酷视频</div>
+            </div>
+            <div class="platform-card" onclick="setPlatformUrl('https://www.bilibili.com')">
+                <div class="platform-icon" style="color:#fb7299;">⚡</div>
+                <div class="platform-name">哔哩哔哩</div>
+            </div>
+            <div class="platform-card" onclick="setPlatformUrl('https://www.mgtv.com')">
+                <div class="platform-icon" style="color:#ff6a00;">🥭</div>
+                <div class="platform-name">芒果TV</div>
+            </div>
+        </div>
+        <p class="platform-hint">点击平台图标可复制平台首页地址作为输入参考（需要具体视频页面的链接）</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const apiSelect = document.getElementById('api-select');
+
+function clearUrl() {
+    document.getElementById('video-url-input').value = '';
+    document.getElementById('video-url-input').focus();
+}
+
+function setPlatformUrl(url) {
+    // 复制到剪贴板并提示
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('已复制平台地址，请访问具体视频页面后复制其链接', 'info');
+    }).catch(() => {
+        document.getElementById('video-url-input').value = url;
+    });
+}
+
+function triggerParse() {
+    const videoUrl = document.getElementById('video-url-input').value.trim();
+    if (!videoUrl) {
+        showToast('请先输入视频链接', 'error');
+        document.getElementById('video-url-input').focus();
+        return;
+    }
+    if (!videoUrl.startsWith('http')) {
+        showToast('请输入正确的视频链接（以 http 开头）', 'error');
+        return;
+    }
+
+    const selectedOption = apiSelect.options[apiSelect.selectedIndex];
+    const apiUrl = selectedOption.dataset.url;
+    const apiName = selectedOption.text;
+    const parseUrl = apiUrl + encodeURIComponent(videoUrl);
+
+    // 显示播放器
+    const container = document.getElementById('player-container');
+    const iframe = document.getElementById('video-iframe');
+    const loading = document.getElementById('player-loading');
+
+    container.style.display = 'block';
+    loading.style.display = 'flex';
+    iframe.style.display = 'none';
+    iframe.src = '';
+
+    document.getElementById('playing-api-name').textContent = '🔗 ' + apiName;
+    document.getElementById('playing-url').textContent = videoUrl.length > 60 ? videoUrl.substring(0, 60) + '...' : videoUrl;
+
+    // 滚动到播放器
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // 加载 iframe
+    iframe.src = parseUrl;
+    iframe.onload = function() {
+        loading.style.display = 'none';
+        iframe.style.display = 'block';
+    };
+    // 超时处理
+    setTimeout(() => {
+        if (loading.style.display !== 'none') {
+            loading.style.display = 'none';
+            iframe.style.display = 'block';
+        }
+    }, 8000);
+}
+
+function changeApi(direction) {
+    const options = apiSelect.options;
+    const current = apiSelect.selectedIndex;
+    let next = current + direction;
+    if (next < 0) next = options.length - 1;
+    if (next >= options.length) next = 0;
+    apiSelect.selectedIndex = next;
+    showToast('已切换到：' + options[next].text, 'info');
+    triggerParse();
+}
+
+function closePlayer() {
+    const container = document.getElementById('player-container');
+    const iframe = document.getElementById('video-iframe');
+    iframe.src = '';
+    container.style.display = 'none';
+}
+
+// Enter 键触发解析
+document.getElementById('video-url-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') triggerParse();
+});
+</script>
+{% endblock %}
