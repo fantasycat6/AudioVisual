@@ -15,7 +15,7 @@
 ### 1. 安装依赖
 
 ```bash
-cd web_app
+cd AudioVisual
 pip install -r requirements.txt
 
 # 如果使用 MySQL，还需要：
