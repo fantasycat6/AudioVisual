@@ -279,8 +279,12 @@ AudioVisual/
 ├── timezone_util.py          # 时区处理工具模块
 ├── requirements.txt          # Python依赖包
 ├── .env.example              # 环境变量配置模板
-├── .gitignore               # Git忽略规则（已排除敏感文件）
-├── README.md                # 项目说明文档（本文件）
+├── start.cmd                 # Windows启动脚本
+├── audiovisual.db            # SQLite数据库文件（开发环境）
+├── backup/                   # 数据备份目录
+├── docs/                     # 详细使用文档
+│   ├── 管理员密码修改说明.md      # 管理员操作指南
+│   └── 普通用户用户中心使用说明.md  # 用户自助服务指南
 ├── static/                   # 静态资源文件
 │   ├── css/                  # 样式表
 │   │   ├── style.css        # 全局样式
@@ -547,8 +551,8 @@ Copyright (c) 2026 AudioVisual Web 项目
 - `管理员密码修改说明.md` - 管理员账户管理指南
 - `普通用户用户中心使用说明.md` - 用户自助服务指南
 
-### Git使用指南
-查看 `README_GIT.md`（如果需要）获取详细的Git配置和部署指南。
+### 项目使用说明
+查看 `docs/` 目录中的详细说明文档，包括管理员操作指南和普通用户使用说明。
 
 ---
 
