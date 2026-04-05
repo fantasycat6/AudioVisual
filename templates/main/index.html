@@ -50,6 +50,25 @@
                 </svg>
                 P A R S E !
             </button>
+            
+            <button id="smart-parse-btn" class="btn btn-primary" onclick="triggerSmartParse()" title="智能解析（自动尝试多个接口）">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                智能解析
+            </button>
+        </div>
+
+        <!-- 智能解析状态显示 -->
+        <div id="smart-parse-status" style="display:none; margin-top: 16px;">
+            <div class="parse-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">正在尝试第 1 个解析接口...</div>
+                <div class="tried-apis" id="tried-apis"></div>
+            </div>
         </div>
 
         <!-- 提示信息 -->
@@ -57,6 +76,10 @@
             <div class="tip-item">
                 <span class="tip-icon">💡</span>
                 <span><strong>解析失败？</strong> 换一个解析接口再试</span>
+            </div>
+            <div class="tip-item">
+                <span class="tip-icon">🚀</span>
+                <span><strong>智能解析：</strong> 自动尝试多个接口，找到可用的为止</span>
             </div>
             <div class="tip-item">
                 <span class="tip-icon">📢</span>
@@ -210,5 +233,208 @@ function closePlayer() {
 document.getElementById('video-url-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') triggerParse();
 });
+
+// ==================== 智能解析功能 ====================
+
+function triggerSmartParse() {
+    const videoUrl = document.getElementById('video-url-input').value.trim();
+    if (!videoUrl) {
+        showToast('请先输入视频链接', 'error');
+        document.getElementById('video-url-input').focus();
+        return;
+    }
+    if (!videoUrl.startsWith('http')) {
+        showToast('请输入正确的视频链接（以 http 开头）', 'error');
+        return;
+    }
+
+    // 显示智能解析状态
+    const statusEl = document.getElementById('smart-parse-status');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const triedApisEl = document.getElementById('tried-apis');
+    
+    statusEl.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressText.textContent = '正在准备智能解析...';
+    triedApisEl.innerHTML = '';
+    
+    // 滚动到状态显示
+    statusEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // 获取当前选中的API（如果有）
+    const selectedOption = apiSelect.options[apiSelect.selectedIndex];
+    const startApiId = selectedOption ? parseInt(selectedOption.value) : null;
+    
+    // 准备参数
+    const params = new URLSearchParams({
+        video_url: videoUrl,
+        max_retries: 5  // 尝试最多5个接口
+    });
+    
+    if (startApiId) {
+        params.append('api_id', startApiId);
+    }
+    
+    // 开始智能解析
+    smartParseIteration(params, 0);
+}
+
+function smartParseIteration(params, attemptCount) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    const triedApisEl = document.getElementById('tried-apis');
+    
+    // 更新进度
+    const progressPercent = Math.min((attemptCount / 5) * 100, 100);
+    progressFill.style.width = `${progressPercent}%`;
+    progressText.textContent = `正在尝试第 ${attemptCount + 1} 个解析接口...`;
+    
+    fetch(`/api/parse/smart?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // 智能解析成功
+                progressFill.style.width = '100%';
+                progressText.textContent = `✅ 使用 ${data.api_name} 解析成功！`;
+                
+                showToast(`智能解析成功：使用 ${data.api_name}`, 'success');
+                
+                // 显示播放器
+                const container = document.getElementById('player-container');
+                const iframe = document.getElementById('video-iframe');
+                const loading = document.getElementById('player-loading');
+                
+                container.style.display = 'block';
+                loading.style.display = 'flex';
+                iframe.style.display = 'none';
+                iframe.src = '';
+                
+                document.getElementById('playing-api-name').textContent = '🚀 ' + data.api_name + ' (智能解析)';
+                document.getElementById('playing-url').textContent = params.get('video_url').length > 60 
+                    ? params.get('video_url').substring(0, 60) + '...' 
+                    : params.get('video_url');
+                
+                // 加载 iframe
+                iframe.src = data.parse_url;
+                iframe.onload = function() {
+                    loading.style.display = 'none';
+                    iframe.style.display = 'block';
+                };
+                
+                // 超时处理
+                setTimeout(() => {
+                    if (loading.style.display !== 'none') {
+                        loading.style.display = 'none';
+                        iframe.style.display = 'block';
+                    }
+                }, 8000);
+                
+                // 自动切换到成功的API
+                const options = apiSelect.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (parseInt(options[i].value) === data.api_id) {
+                        apiSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // 隐藏智能解析状态
+                setTimeout(() => {
+                    document.getElementById('smart-parse-status').style.display = 'none';
+                }, 3000);
+                
+            } else {
+                // 当前尝试失败，显示已尝试的接口
+                if (data.tried_apis && data.tried_apis.length > 0) {
+                    triedApisEl.innerHTML = '已尝试: ' + data.tried_apis.map(a => a.name).join(' → ');
+                }
+                
+                // 如果还有下一个接口可以尝试
+                if (data.next_api_id && attemptCount < 4) { // 最多尝试5次
+                    // 更新参数，从下一个接口开始
+                    params.set('api_id', data.next_api_id);
+                    
+                    // 继续尝试下一个接口
+                    setTimeout(() => {
+                        smartParseIteration(params, attemptCount + 1);
+                    }, 1000); // 1秒间隔
+                } else {
+                    // 所有尝试都失败了
+                    progressFill.style.width = '100%';
+                    progressFill.style.background = 'var(--accent)';
+                    progressText.textContent = '❌ 所有接口尝试均失败，请检查链接或稍后重试';
+                    showToast('智能解析失败，请手动选择其他接口', 'error');
+                    
+                    // 5秒后隐藏状态
+                    setTimeout(() => {
+                        document.getElementById('smart-parse-status').style.display = 'none';
+                    }, 5000);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('智能解析失败:', error);
+            progressFill.style.width = '100%';
+            progressFill.style.background = 'var(--accent)';
+            progressText.textContent = '❌ 智能解析失败：' + error.message;
+            showToast('智能解析失败：' + error.message, 'error');
+            
+            setTimeout(() => {
+                document.getElementById('smart-parse-status').style.display = 'none';
+            }, 5000);
+        });
+}
+
+// 添加进度条样式
+const style = document.createElement('style');
+style.textContent = `
+    .parse-progress {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: var(--bg-hover);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #8bc34a);
+        border-radius: 3px;
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+    
+    .progress-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .tried-apis {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-family: monospace;
+        background: rgba(0,0,0,0.2);
+        padding: 4px 8px;
+        border-radius: 4px;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}

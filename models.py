@@ -5,8 +5,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from timezone_util import format_china_time, get_app_time_now
 
 db = SQLAlchemy()
+
+def app_time_now():
+    """获取当前应用时区时间，用于数据库字段默认值"""
+    return datetime.now()  # 直接使用本地时间，不使用时区信息
 
 
 class User(UserMixin, db.Model):
@@ -18,7 +23,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=app_time_now)
     last_login = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
@@ -40,7 +45,7 @@ class ParseAPI(db.Model):
     url = db.Column(db.String(500), nullable=False)
     is_enabled = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=app_time_now)
 
     def to_dict(self):
         return {
@@ -66,7 +71,7 @@ class DramaSite(db.Model):
     icon = db.Column(db.String(50), nullable=True, default='🎬')
     is_enabled = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=app_time_now)
 
     def to_dict(self):
         return {
@@ -81,6 +86,78 @@ class DramaSite(db.Model):
 
     def __repr__(self):
         return f'<DramaSite {self.name}>'
+
+
+class APICallLog(db.Model):
+    """API调用记录表"""
+    __tablename__ = 'api_call_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    api_type = db.Column(db.String(20), nullable=False)  # 'smart_parse', 'quick_parse', 'normal'
+    video_url = db.Column(db.String(500), nullable=False)
+    success = db.Column(db.Boolean, default=True)
+    api_id = db.Column(db.Integer, db.ForeignKey('parse_apis.id'), nullable=True)
+    api_name = db.Column(db.String(100), nullable=True)
+    error_message = db.Column(db.String(200), nullable=True)
+    response_time_ms = db.Column(db.Integer, nullable=True)  # 响应时间（毫秒）
+    created_at = db.Column(db.DateTime, default=app_time_now)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'api_type': self.api_type,
+            'video_url': self.video_url,
+            'success': self.success,
+            'api_id': self.api_id,
+            'api_name': self.api_name,
+            'error_message': self.error_message,
+            'response_time_ms': self.response_time_ms,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def __repr__(self):
+        return f'<APICallLog {self.api_type} {"success" if self.success else "failed"}>'
+
+
+class BackupFile(db.Model):
+    """备份文件表"""
+    __tablename__ = 'backup_files'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(200), nullable=False)
+    filepath = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer, nullable=True)  # 文件大小（字节）
+    backup_type = db.Column(db.String(20), nullable=False, default='full')  # full, partial
+    description = db.Column(db.String(200), nullable=True)
+    created_at = db.Column(db.DateTime, default=app_time_now)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'filepath': self.filepath,
+            'file_size': self.file_size,
+            'file_size_formatted': self.format_size(),
+            'backup_type': self.backup_type,
+            'description': self.description,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_at_formatted': format_china_time(self.created_at, '%Y-%m-%d %H:%M:%S') if self.created_at else None
+        }
+    
+    def format_size(self):
+        """格式化文件大小"""
+        if not self.file_size:
+            return "未知"
+        
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if self.file_size < 1024.0 or unit == 'GB':
+                return f"{self.file_size:.1f} {unit}"
+            self.file_size /= 1024.0
+    
+    def __repr__(self):
+        return f'<BackupFile {self.filename}>'
 
 
 # 默认数据
@@ -112,12 +189,42 @@ DEFAULT_DRAMA_SITES = [
 
 def init_default_data():
     """初始化默认数据（仅在表为空时）"""
+    import os
+    
+    # 初始化解析接口
     if ParseAPI.query.count() == 0:
         for api in DEFAULT_APIS:
             db.session.add(ParseAPI(**api))
 
+    # 初始化影视导航站点
     if DramaSite.query.count() == 0:
         for site in DEFAULT_DRAMA_SITES:
             db.session.add(DramaSite(**site))
+
+    # 初始化管理员账户（如果环境变量配置了）
+    if User.query.count() == 0:
+        admin_username = os.environ.get('ADMIN_USERNAME', '').strip()
+        admin_password = os.environ.get('ADMIN_PASSWORD', '').strip()
+        admin_email = os.environ.get('ADMIN_EMAIL', '').strip()
+        
+        if admin_username and admin_password and admin_email:
+            # 检查用户名和邮箱是否有效
+            if not User.query.filter_by(username=admin_username).first() and not User.query.filter_by(email=admin_email).first():
+                admin_user = User(
+                    username=admin_username,
+                    email=admin_email,
+                    is_admin=True
+                )
+                admin_user.set_password(admin_password)
+                db.session.add(admin_user)
+                print(f"[INFO] 已通过环境变量创建管理员账户: {admin_username}")
+            else:
+                print("[WARNING] 管理员用户名或邮箱已被占用，跳过创建")
+        else:
+            # 如果没有配置环境变量，打印提示信息
+            print("[INFO] 未配置管理员环境变量，请通过注册页面创建第一个用户")
+            print("[INFO] 第一个注册的用户将自动成为管理员")
+            # 或者，可以创建一个默认的管理员账户
+            # 这里我们选择不创建，让用户通过注册页面创建
 
     db.session.commit()

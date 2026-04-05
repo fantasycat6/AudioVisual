@@ -1,10 +1,12 @@
 """
 认证蓝图 - 登录、注册、登出
 """
+import os
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from models import db, User
 from datetime import datetime
+from timezone_util import get_china_time_now
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -38,7 +40,8 @@ def login():
         ).first()
 
         if user and user.check_password(password):
-            user.last_login = datetime.utcnow()
+            # 使用中国时间（上海时区）记录最后登录时间
+            user.last_login = get_china_time_now()
             db.session.commit()
             login_user(user, remember=remember)
             if request.is_json:
@@ -100,9 +103,36 @@ def register():
         # 创建用户
         user = User(username=username, email=email)
         user.set_password(password)
-        # 第一个注册的用户自动成为管理员
-        if User.query.count() == 0:
+        
+        # 检查是否需要设置用户为管理员
+        # 1. 如果数据库中还没有用户（包括通过环境变量创建的管理员）
+        # 2. 或者这个新注册的用户就是环境变量中配置的管理员用户名/邮箱
+        user_count = User.query.count()
+        admin_username = os.environ.get('ADMIN_USERNAME', '').strip()
+        admin_email = os.environ.get('ADMIN_EMAIL', '').strip()
+        
+        if user_count == 0:
+            # 如果数据库完全为空，第一个注册用户自动成为管理员
             user.is_admin = True
+            print(f"[INFO] 第一个注册用户自动成为管理员: {username}")
+        elif admin_username and admin_email:
+            # 如果环境变量配置了管理员，检查是否匹配
+            if username == admin_username or email == admin_email:
+                # 检查是否已经有这个管理员账户
+                existing_admin = User.query.filter(
+                    (User.username == admin_username) | (User.email == admin_email)
+                ).first()
+                if existing_admin:
+                    # 管理员账户已存在，不能创建重复的管理员
+                    if request.is_json:
+                        return jsonify({'success': False, 'message': '管理员账户已存在，请联系管理员'}), 400
+                    flash('管理员账户已存在，请联系管理员', 'error')
+                    return render_template('auth/register.html')
+                else:
+                    # 匹配环境变量配置，设置为管理员
+                    user.is_admin = True
+                    print(f"[INFO] 创建环境变量配置的管理员账户: {username}")
+        
         db.session.add(user)
         db.session.commit()
 

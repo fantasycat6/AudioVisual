@@ -1,0 +1,898 @@
+{% extends "base.html" %}
+
+{% block title %}API 文档与介绍{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- 页面头部 -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h2 class="page-title">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+                </svg>
+                API 文档与介绍
+            </h2>
+            <p class="page-desc">视频解析平台的API接口使用说明与实时调用统计</p>
+        </div>
+    </div>
+
+    <!-- 快速导航 -->
+    <div class="quick-nav-row">
+        <div class="quick-nav">
+            <a href="#" class="quick-nav-item active" onclick="showSection('api-basics', event)">
+                <div class="quick-nav-icon">📚</div>
+                <div class="quick-nav-text">API 基础</div>
+            </a>
+            <a href="#" class="quick-nav-item" onclick="showSection('api-samples', event)">
+                <div class="quick-nav-icon">💻</div>
+                <div class="quick-nav-text">接口示例</div>
+            </a>
+            <a href="#" class="quick-nav-item" onclick="showSection('api-endpoints', event)">
+                <div class="quick-nav-icon">🔗</div>
+                <div class="quick-nav-text">端点列表</div>
+            </a>
+            <a href="#" class="quick-nav-item" onclick="showSection('api-test', event)">
+                <div class="quick-nav-icon">🧪</div>
+                <div class="quick-nav-text">在线测试</div>
+            </a>
+            <a href="#" class="quick-nav-item" onclick="showSection('api-stats', event)">
+                <div class="quick-nav-icon">📊</div>
+                <div class="quick-nav-text">调用统计</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- API基础介绍 -->
+    <div id="api-basics" class="api-section active">
+        <div class="section-header">
+            <h3 class="section-title">📚 API 基础介绍</h3>
+            <p class="section-desc">了解视频解析平台API的基本概念和使用要求</p>
+        </div>
+
+        <div class="api-basics-content">
+            <div class="info-card">
+                <h4>核心功能</h4>
+                <p>视频解析平台提供多个API接口，主要用于：</p>
+                <ul>
+                    <li><strong>智能视频解析</strong>：自动尝试多个解析接口，直到找到可用的</li>
+                    <li><strong>快速接口获取</strong>：获取当前所有可用的解析接口列表</li>
+                    <li><strong>影视导航</strong>：获取影视资源导航网站列表</li>
+                    <li><strong>用户管理</strong>：用户认证和权限验证</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h4>认证要求</h4>
+                <p>所有API接口都需要用户登录认证，通过以下方式验证：</p>
+                <ul>
+                    <li>使用 <code>Flask-Login</code> 进行用户会话管理</li>
+                    <li>每个请求都需要有效的登录会话Cookie</li>
+                    <li>部分接口需要管理员权限（如管理后台相关API）</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h4>通用响应格式</h4>
+                <p>所有JSON API接口都遵循统一的响应格式：</p>
+                <pre><code class="language-json">{
+    "success": true,
+    "message": "操作成功说明",
+    "data": { /* 具体的返回数据 */ }
+}</code></pre>
+                <p>或失败时：</p>
+                <pre><code class="language-json">{
+    "success": false,
+    "message": "错误信息说明",
+    "error": "具体的错误类型"
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 接口示例 -->
+    <div id="api-samples" class="api-section">
+        <div class="section-header">
+            <h3 class="section-title">💻 接口使用示例</h3>
+            <p class="section-desc">实际调用API接口的代码示例</p>
+        </div>
+
+        <div class="api-samples-content">
+            <div class="info-card">
+                <h4>JavaScript (Fetch API)</h4>
+                <pre><code class="language-javascript">// 智能解析API调用示例
+async function smartParseVideo(videoUrl) {
+    try {
+        const response = await fetch(`/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('解析成功:', data.parse_url);
+            // 加载视频播放器
+            document.getElementById('video-iframe').src = data.parse_url;
+        } else {
+            console.error('解析失败:', data.message);
+        }
+    } catch (error) {
+        console.error('请求失败:', error);
+    }
+}
+
+// 获取解析接口列表
+async function getParseAPIs() {
+    try {
+        const response = await fetch('/api/parse/quick');
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('可用接口:', data.apis);
+            return data.apis;
+        }
+    } catch (error) {
+        console.error('获取接口失败:', error);
+    }
+}</code></pre>
+            </div>
+
+            <div class="info-card">
+                <h4>Python (requests库)</h4>
+                <pre><code class="language-python">import requests
+
+def smart_parse_video(video_url):
+    """智能解析视频链接"""
+    url = f"http://your-domain/api/parse/smart"
+    params = {"video_url": video_url}
+    
+    # 需要先登录获取session
+    session = requests.Session()
+    # 登录代码略...
+    
+    response = session.get(url, params=params)
+    data = response.json()
+    
+    if data['success']:
+        print(f"解析成功，使用接口: {data['api_name']}")
+        print(f"播放链接: {data['parse_url']}")
+        return data['parse_url']
+    else:
+        print(f"解析失败: {data['message']}")
+        return None</code></pre>
+            </div>
+
+            <div class="info-card">
+                <h4>快速CURL命令测试</h4>
+                <pre><code class="language-bash"># 智能解析测试（需先登录获取cookie）
+curl -G "http://localhost:5000/api/parse/smart" \
+  --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
+  -H "Cookie: session=YOUR_SESSION_COOKIE"
+
+# 获取解析接口列表
+curl -G "http://localhost:5000/api/parse/quick" \
+  -H "Cookie: session=YOUR_SESSION_COOKIE"
+
+# 获取影视导航列表
+curl -G "http://localhost:5000/api/drama-sites" \
+  -H "Cookie: session=YOUR_SESSION_COOKIE"</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 端点列表 -->
+    <div id="api-endpoints" class="api-section">
+        <div class="section-header">
+            <h3 class="section-title">🔗 API 端点列表</h3>
+            <p class="section-desc">所有可用的API接口详细信息</p>
+        </div>
+
+        <div class="api-endpoints-content">
+            <table class="api-endpoints-table">
+                <thead>
+                    <tr>
+                        <th>接口名称</th>
+                        <th>路径</th>
+                        <th>方法</th>
+                        <th>描述</th>
+                        <th>参数</th>
+                        <th>返回示例</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>智能解析</strong></td>
+                        <td><code>/api/parse/smart</code></td>
+                        <td><span class="method-get">GET</span></td>
+                        <td>自动尝试多个解析接口，失败自动切换</td>
+                        <td>
+                            <code>video_url</code> (必填)<br>
+                            <code>api_id</code> (可选)<br>
+                            <code>max_retries</code> (可选，默认3)
+                        </td>
+                        <td><a href="#" onclick="showApiExample('smart', event)">查看示例</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>快速解析</strong></td>
+                        <td><code>/api/parse/quick</code></td>
+                        <td><span class="method-get">GET</span></td>
+                        <td>获取所有可用解析接口列表</td>
+                        <td>无</td>
+                        <td><a href="#" onclick="showApiExample('quick', event)">查看示例</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>解析接口列表</strong></td>
+                        <td><code>/api/apis</code></td>
+                        <td><span class="method-get">GET</span></td>
+                        <td>获取所有启用状态的解析接口</td>
+                        <td>无</td>
+                        <td><a href="#" onclick="showApiExample('apis', event)">查看示例</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>影视导航列表</strong></td>
+                        <td><code>/api/drama-sites</code></td>
+                        <td><span class="method-get">GET</span></td>
+                        <td>获取所有启用状态的影视导航网站</td>
+                        <td>无</td>
+                        <td><a href="#" onclick="showApiExample('drama', event)">查看示例</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>传统解析</strong></td>
+                        <td><code>/parse</code></td>
+                        <td><span class="method-get">GET</span></td>
+                        <td>传统视频解析页面（iframe嵌入）</td>
+                        <td>
+                            <code>video_url</code> (必填)<br>
+                            <code>api_id</code> (可选)
+                        </td>
+                        <td><a href="#" onclick="showApiExample('parse', event)">查看示例</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- API示例模态框 -->
+        <div id="api-example-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>API 响应示例</h3>
+                    <button class="modal-close" onclick="closeApiExample()">×</button>
+                </div>
+                <div class="modal-body">
+                    <pre id="api-example-code"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在线测试 -->
+    <div id="api-test" class="api-section">
+        <div class="section-header">
+            <h3 class="section-title">🧪 在线API测试</h3>
+            <p class="section-desc">直接测试API接口的功能和响应</p>
+        </div>
+
+        <div class="api-test-content">
+            <div class="test-card">
+                <h4>智能解析测试</h4>
+                <div class="test-form">
+                    <input type="text" id="test-video-url" class="test-input" 
+                           placeholder="输入视频URL（例如：https://v.qq.com/x/cover/xxx.html）">
+                    <div class="test-controls">
+                        <label>
+                            <input type="checkbox" id="test-max-retries"> 
+                            最大尝试次数：<input type="number" id="max-retries-value" value="3" min="1" max="10" style="width:60px;">
+                        </label>
+                        <button class="btn btn-primary" onclick="testSmartParse(event)">测试智能解析</button>
+                    </div>
+                </div>
+                <div class="test-result">
+                    <pre id="test-result-output">测试结果将显示在这里...</pre>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h4>快速解析测试</h4>
+                <p>获取当前所有可用的解析接口列表</p>
+                <button class="btn btn-secondary" onclick="testQuickParse(event)">测试快速解析</button>
+                <div class="test-result" style="margin-top: 16px;">
+                    <pre id="quick-parse-result">点击上方按钮开始测试...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API统计信息 -->
+    <div id="api-stats" class="api-section">
+        <div class="section-header">
+            <h3 class="section-title">📊 API 调用统计</h3>
+            <p class="section-desc">API接口的实时使用统计信息</p>
+        </div>
+
+        <div class="api-stats-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ total_api_calls }}</div>
+                        <div class="stat-label">总API调用次数</div>
+                    </div>
+                    <div class="stat-trend good">实时数据</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ success_rate }}%</div>
+                        <div class="stat-label">平均成功率</div>
+                    </div>
+                    {% if success_rate >= 90 %}
+                    <div class="stat-trend good">优秀</div>
+                    {% elif success_rate >= 80 %}
+                    <div class="stat-trend average">良好</div>
+                    {% else %}
+                    <div class="stat-trend poor">需要优化</div>
+                    {% endif %}
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ avg_response_time }}ms</div>
+                        <div class="stat-label">平均响应时间</div>
+                    </div>
+                    {% if avg_response_time < 500 %}
+                    <div class="stat-trend good">快速</div>
+                    {% elif avg_response_time < 1000 %}
+                    <div class="stat-trend average">正常</div>
+                    {% else %}
+                    <div class="stat-trend poor">较慢</div>
+                    {% endif %}
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🔗</div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ api_count }}</div>
+                        <div class="stat-label">可用解析接口</div>
+                    </div>
+                    <div class="stat-trend good">在线</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ today_active_users }}</div>
+                        <div class="stat-label">今日活跃用户</div>
+                    </div>
+                    {% if today_active_users > 0 %}
+                    <div class="stat-trend good">活跃</div>
+                    {% else %}
+                    <div class="stat-trend poor">暂无</div>
+                    {% endif %}
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🎬</div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ drama_site_count }}</div>
+                        <div class="stat-label">影视导航网站</div>
+                    </div>
+                    <div class="stat-trend good">收录</div>
+                </div>
+            </div>
+            
+            <!-- 添加刷新按钮 -->
+            <div style="text-align: center; margin-top: 24px;">
+                <button onclick="location.reload()" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px; margin: 0 auto;">
+                    <span>🔄</span>
+                    <span>刷新统计</span>
+                </button>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                    统计数据实时更新，点击按钮获取最新数据
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// 导航切换功能
+function showSection(sectionId, event) {
+    console.log(`切换部分到: ${sectionId}`, event);
+    
+    // 传递事件参数
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // 移除所有导航项的active类
+        document.querySelectorAll('.quick-nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // 添加当前导航项的active类
+        event.currentTarget.classList.add('active');
+        console.log(`激活导航项: ${event.currentTarget.textContent.trim()}`);
+        
+        // 隐藏所有部分
+        document.querySelectorAll('.api-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // 显示选中的部分
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+            console.log(`显示部分: ${sectionId} 成功`);
+        } else {
+            console.error(`未找到目标部分: ${sectionId}`);
+        }
+    } else {
+        // 如果没有事件对象，直接切换部分（用于默认显示）
+        console.log(`直接显示部分: ${sectionId} (无事件)`);
+        document.querySelectorAll('.api-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
+    }
+}
+
+// API示例模态框
+function showApiExample(apiType, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    const examples = {
+        'smart': `{
+    "success": true,
+    "message": "使用 解析接口1 解析成功",
+    "parse_url": "https://jx.example.com/?url=https://v.qq.com/x/cover/xxx.html",
+    "api_id": 1,
+    "api_name": "解析接口1",
+    "next_api_id": 2,
+    "tried_apis": [
+        {"id": 1, "name": "解析接口1", "url": "https://jx.example.com/?url=", "index": 0}
+    ]
+}`,
+        'quick': `{
+    "success": true,
+    "message": "找到 15 个可用解析接口",
+    "apis": [
+        {"id": 1, "name": "解析接口1", "url": "https://jx.example.com/?url=", "is_enabled": true, "sort_order": 1},
+        {"id": 2, "name": "解析接口2", "url": "https://jx2.example.com/?v=", "is_enabled": true, "sort_order": 2}
+    ]
+}`,
+        'apis': `[
+    {"id": 1, "name": "解析接口1", "url": "https://jx.example.com/?url=", "is_enabled": true, "sort_order": 1},
+    {"id": 2, "name": "解析接口2", "url": "https://jx2.example.com/?v=", "is_enabled": true, "sort_order": 2}
+]`,
+        'drama': `[
+    {"id": 1, "name": "奈菲影视", "url": "https://www.naifei.tv", "description": "最新最全的影视资源", "icon": "🎬", "is_enabled": true, "sort_order": 1},
+    {"id": 2, "name": "豌豆影视", "url": "https://www.wandou.tv", "description": "高清影视在线观看", "icon": "🍿", "is_enabled": true, "sort_order": 2}
+]`,
+        'parse': `{
+    "html": "<iframe src='https://jx.example.com/?url=https://v.qq.com/x/cover/xxx.html'></iframe>"
+}`
+    };
+    
+    document.getElementById('api-example-code').textContent = examples[apiType];
+    document.getElementById('api-example-modal').style.display = 'block';
+}
+
+function closeApiExample() {
+    document.getElementById('api-example-modal').style.display = 'none';
+}
+
+// 在线测试功能
+function testSmartParse(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    const videoUrl = document.getElementById('test-video-url').value.trim();
+    if (!videoUrl) {
+        alert('请输入视频URL');
+        return;
+    }
+    
+    if (!videoUrl.startsWith('http')) {
+        alert('请输入有效的URL（以http或https开头）');
+        return;
+    }
+    
+    let url = `/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}`;
+    
+    if (document.getElementById('test-max-retries').checked) {
+        const maxRetries = document.getElementById('max-retries-value').value;
+        url += `&max_retries=${maxRetries}`;
+    }
+    
+    document.getElementById('test-result-output').textContent = '正在测试中...';
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('test-result-output').textContent = 
+                JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById('test-result-output').textContent = 
+                `测试失败: ${error.message}`;
+        });
+}
+
+function testQuickParse(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    document.getElementById('quick-parse-result').textContent = '正在测试中...';
+    
+    fetch('/api/parse/quick')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('quick-parse-result').textContent = 
+                JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById('quick-parse-result').textContent = 
+                `测试失败: ${error.message}`;
+        });
+}
+
+// API统计信息已经直接在模板中生成，无需动态加载
+
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 点击模态框外部关闭
+    document.getElementById('api-example-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeApiExample();
+        }
+    });
+    
+    // 统计卡片悬停效果
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-4px)';
+            card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = 'none';
+        });
+    });
+});
+
+// API文档样式
+const style = document.createElement('style');
+style.textContent = `
+    .quick-nav-row {
+        margin-top: 20px;
+    }
+    
+    .quick-nav {
+        display: flex;
+        gap: 12px;
+        padding: 8px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        overflow-x: auto;
+    }
+    
+    .quick-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 16px;
+        background: transparent;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        color: var(--text-secondary);
+        min-width: 80px;
+        transition: all 0.2s;
+    }
+    
+    .quick-nav-item:hover {
+        background: var(--bg-hover);
+        color: var(--text-primary);
+    }
+    
+    .quick-nav-item.active {
+        background: var(--accent);
+        color: white;
+    }
+    
+    .quick-nav-icon {
+        font-size: 20px;
+        margin-bottom: 6px;
+    }
+    
+    .quick-nav-text {
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .api-section {
+        display: none;
+        margin-top: 32px;
+    }
+    
+    .api-section.active {
+        display: block;
+    }
+    
+    .section-header {
+        margin-bottom: 24px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+    
+    .section-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .info-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    
+    .info-card h4 {
+        font-size: 16px;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+    }
+    
+    .info-card p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+    
+    .info-card ul {
+        padding-left: 20px;
+        margin-bottom: 12px;
+    }
+    
+    .info-card li {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        line-height: 1.5;
+    }
+    
+    .info-card pre {
+        background: rgba(0,0,0,0.2);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        overflow-x: auto;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 12px;
+        margin-top: 12px;
+    }
+    
+    .api-endpoints-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+    }
+    
+    .api-endpoints-table th {
+        background: rgba(0,0,0,0.1);
+        padding: 16px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .api-endpoints-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        vertical-align: top;
+    }
+    
+    .api-endpoints-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .method-get {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #e3f2fd;
+        color: #1976d2;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .test-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .test-form {
+        margin-bottom: 16px;
+    }
+    
+    .test-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .test-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .test-result {
+        background: rgba(0,0,0,0.2);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 12px;
+        max-height: 300px;
+        overflow: auto;
+    }
+    
+    .api-stats-content {
+        margin-top: 20px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+    }
+    
+    .stat-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+    }
+    
+    .stat-info {
+        flex: 1;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
+    
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        background: var(--bg-primary);
+        border-radius: var(--radius-md);
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: calc(80vh - 70px);
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+    
+    .stat-trend {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-top: 4px;
+        display: inline-block;
+    }
+    
+    .stat-trend.good {
+        color: #4caf50;
+        background: rgba(76, 175, 80, 0.1);
+    }
+    
+    .stat-trend.average {
+        color: #ff9800;
+        background: rgba(255, 152, 0, 0.1);
+    }
+    
+    .stat-trend.poor {
+        color: #f44336;
+        background: rgba(244, 67, 54, 0.1);
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

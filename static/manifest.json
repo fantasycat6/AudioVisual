@@ -1,0 +1,26 @@
+{
+  "name": "AudioVisual - 视频解析平台",
+  "short_name": "AudioVisual",
+  "description": "多功能视频解析平台，支持多个解析接口和影视导航",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#2980b9",
+  "icons": [
+    {
+      "src": "/static/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "video", "entertainment"],
+  "lang": "zh-CN",
+  "orientation": "portrait-primary"
+}

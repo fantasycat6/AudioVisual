@@ -19,6 +19,32 @@
     --radius-sm: 8px;
     --radius-lg: 16px;
     --transition: 0.2s ease;
+    
+    /* ===== 新增颜色变量 ===== */
+    --primary-gradient: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    --admin-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --user-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --card-hover: rgba(255, 255, 255, 0.05);
+    --text-glow: 0 0 20px rgba(255, 103, 104, 0.3);
+    
+    /* ===== 状态颜色 ===== */
+    --success-color: #4caf50;
+    --success-bg: rgba(76, 175, 80, 0.15);
+    --warning-color: #ff9800;
+    --warning-bg: rgba(255, 152, 0, 0.15);
+    --danger-color: #f44336;
+    --danger-bg: rgba(244, 67, 54, 0.15);
+    --info-color: #2196f3;
+    --info-bg: rgba(33, 150, 243, 0.15);
+    
+    /* ===== 模态框变量 ===== */
+    --modal-background: rgba(0, 0, 0, 0.75);
+    --modal-blur: blur(20px);
+    --modal-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    
+    /* ===== 动画变量 ===== */
+    --ease-out: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -80,19 +106,200 @@ a:hover { color: var(--accent-hover); }
     color: var(--accent);
 }
 
-.nav-user {
+/* ===== 用户下拉菜单样式 ===== */
+.nav-user-dropdown {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.user-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.user-menu-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-dim);
+}
+
+.user-menu-btn:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.user-avatar {
+    display: flex;
+    align-items: center;
+}
+
+.avatar-icon {
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 4px;
+}
+
+.admin-icon {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.user-icon {
+    background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.dropdown-arrow {
+    font-size: 10px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.user-menu-btn.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    min-width: 240px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.user-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-info-dropdown {
+    padding: 16px;
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.user-avatar-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-card);
+    border-radius: 50%;
+    font-size: 16px;
+}
+
+.user-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-display-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-email {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+}
+
+.dropdown-item {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    font-size: 14px;
 }
 
-.user-badge {
-    font-size: 13px;
-    color: var(--text-secondary);
-    background: var(--bg-card);
-    padding: 4px 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
+.dropdown-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.dropdown-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.logout-item:hover {
+    background: rgba(255, 103, 104, 0.1);
+    color: var(--accent);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+    .nav-user-dropdown {
+        margin-left: auto;
+    }
+    
+    .user-menu-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    .user-dropdown-menu {
+        min-width: 200px;
+        right: 8px;
+    }
+    
+    .username {
+        max-width: 80px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 /* ===== 按钮 ===== */

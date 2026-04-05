@@ -9,33 +9,7 @@
         </div>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <div class="stat-info">
-                <div class="stat-number">{{ user_count }}</div>
-                <div class="stat-label">注册用户</div>
-            </div>
-            <a href="{{ url_for('admin.users') }}" class="stat-link">管理 →</a>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">🔗</div>
-            <div class="stat-info">
-                <div class="stat-number">{{ api_count }}</div>
-                <div class="stat-label">解析接口</div>
-            </div>
-            <a href="{{ url_for('admin.apis') }}" class="stat-link">管理 →</a>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">🎬</div>
-            <div class="stat-info">
-                <div class="stat-number">{{ site_count }}</div>
-                <div class="stat-label">影视导航</div>
-            </div>
-            <a href="{{ url_for('admin.drama_sites') }}" class="stat-link">管理 →</a>
-        </div>
-    </div>
+    
 
     <!-- 快速入口 -->
     <div class="admin-nav-cards">
@@ -54,61 +28,172 @@
             <div class="anc-title">影视导航管理</div>
             <div class="anc-desc">管理影视导航网站列表</div>
         </a>
+        <a href="#backup-section" onclick="scrollToBackupSection(); return false;" class="admin-nav-card">
+            <div class="anc-icon">💾</div>
+            <div class="anc-title">备份文件管理</div>
+            <div class="anc-desc">创建、下载、恢复和删除备份文件</div>
+        </a>
+        <a href="{{ url_for('main.api_docs') }}" class="admin-nav-card">
+            <div class="anc-icon">📘</div>
+            <div class="anc-title">API文档</div>
+            <div class="anc-desc">API接口使用说明和在线测试</div>
+        </a>
     </div>
 
-    <!-- 数据备份与恢复 -->
+    <!-- API统计卡片 -->
+    <div class="data-card" style="margin-top:24px;">
+        <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="charts-icon">📊</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: var(--text-primary);">API 统计</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-secondary);">实时API调用数据</p>
+                </div>
+            </div>
+            <button id="refresh-api-stats" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 8px;">
+                <span id="refresh-icon">🔄</span>
+                <span id="refresh-text">刷新</span>
+            </button>
+        </div>
+        
+        <div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ total_api_calls }}</div>
+                    <div class="stat-label">总API调用</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ today_calls }}</div>
+                    <div class="stat-label">今日调用</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ success_rate }}%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API调用趋势图 -->
+    <div class="data-card" style="margin-top:24px;">
+        <div class="charts-section">
+            <div class="charts-header">
+                <div class="charts-title-row">
+                    <span class="charts-icon">📊</span>
+                    <div>
+                        <h3 class="charts-title">API 调用趋势</h3>
+                        <p class="charts-desc">最近24小时的API调用情况</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div id="api-calls-chart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 备份文件管理 -->
     <div class="data-card" style="margin-top:24px;">
         <div class="backup-section">
             <div class="backup-header">
                 <div class="backup-title-row">
                     <span class="backup-icon">💾</span>
                     <div>
-                        <h3 class="backup-title">数据备份与导入</h3>
-                        <p class="backup-desc">将解析接口和影视导航数据导出为 JSON 文件，或从备份文件恢复数据。</p>
+                        <h3 class="backup-title">备份文件管理</h3>
+                        <p class="backup-desc">创建、管理、下载和恢复数据备份文件。</p>
                     </div>
+                </div>
+                <div style="margin-left: auto; display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="createNewBackup()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        创建新备份
+                    </button>
+                    <button class="btn btn-secondary" onclick="openImportBackupModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        导入备份
+                    </button>
                 </div>
             </div>
-
-            <div class="backup-actions">
-                <!-- 导出 -->
-                <div class="backup-block">
-                    <h4 class="backup-block-title">📤 导出备份</h4>
-                    <p class="backup-block-desc">将当前所有解析接口和影视导航数据导出为 JSON 文件，可用于迁移或备份。</p>
-                    <a href="{{ url_for('admin.export_backup') }}" class="btn btn-primary">
-                        下载备份文件
-                    </a>
+            
+            <!-- 备份文件列表 -->
+            <div class="backup-list-container" id="backup-list-container">
+                <div class="backup-list-loading" id="backup-list-loading">
+                    <div class="spinner"></div>
+                    <p>正在加载备份列表...</p>
                 </div>
-
-                <div class="backup-divider"></div>
-
-                <!-- 导入 -->
-                <div class="backup-block">
-                    <h4 class="backup-block-title">📥 导入备份</h4>
-                    <p class="backup-block-desc">从备份 JSON 文件恢复数据。</p>
-
-                    <div class="import-mode-row">
-                        <label class="radio-label">
-                            <input type="radio" name="import-mode" value="merge" checked>
-                            <span>合并导入</span>
-                            <small>（跳过已有 URL，仅添加新数据）</small>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="import-mode" value="overwrite">
-                            <span>覆盖导入</span>
-                            <small>（清空现有数据后全量导入，不可逆！）</small>
-                        </label>
-                    </div>
-
-                    <div class="import-file-row">
-                        <label class="file-input-label" for="backup-file-input">
-                            <span id="file-name-display">选择 .json 文件…</span>
-                        </label>
-                        <input type="file" id="backup-file-input" accept=".json" style="display:none"
-                               onchange="document.getElementById('file-name-display').textContent = this.files[0]?.name || '选择 .json 文件…'">
-                        <button class="btn btn-primary" onclick="doImport()">开始导入</button>
-                    </div>
-                    <div id="import-result" style="display:none;margin-top:10px;"></div>
+                <div class="backup-list-empty" id="backup-list-empty" style="display:none;">
+                    <div class="empty-icon">🗃️</div>
+                    <h4>暂无备份文件</h4>
+                    <p>点击上方"创建新备份"按钮创建第一个备份</p>
                 </div>
+                <table class="data-table" id="backup-list-table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>文件名</th>
+                            <th>大小</th>
+                            <th>类型</th>
+                            <th>创建时间</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="backup-list-body">
+                        <!-- 备份文件行将由JS动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 导入备份模态框 -->
+<div id="import-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📥 导入备份文件</h3>
+            <button class="modal-close" onclick="closeImportBackupModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <p>从备份 JSON 文件恢复数据。</p>
+            
+            <div class="import-mode-row" style="margin: 20px 0;">
+                <label class="radio-label">
+                    <input type="radio" name="import-mode-modal" value="merge" checked id="import-mode-merge">
+                    <span>合并导入</span>
+                    <small>（跳过已有 URL，仅添加新数据）</small>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="import-mode-modal" value="overwrite">
+                    <span>覆盖导入</span>
+                    <small>（清空现有数据后全量导入，不可逆！）</small>
+                </label>
+            </div>
+
+            <div class="import-file-row" style="margin: 30px 0;">
+                <label class="file-input-label" for="import-file-input" style="cursor:pointer;">
+                    <span id="import-filename-display">选择 .json 文件…</span>
+                </label>
+                <input type="file" id="import-file-input" accept=".json" style="display:none"
+                       onchange="handleImportFileChange(this)">
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button class="btn btn-ghost" onclick="closeImportBackupModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitImportBackup()">开始导入</button>
             </div>
         </div>
     </div>
@@ -116,43 +201,643 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-function doImport() {
-    const file = document.getElementById('backup-file-input').files[0];
-    if (!file) { showToast('请先选择备份文件', 'error'); return; }
-    const mode = document.querySelector('input[name="import-mode"]:checked').value;
-    if (mode === 'overwrite' && !confirm('⚠️ 覆盖导入将清空所有现有数据，确定继续？')) return;
+<!-- 引入ECharts图表库 -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
+<script>
+// 绘制API调用趋势图
+function renderApiCallsChart() {
+    const chartDom = document.getElementById('api-calls-chart');
+    if (!chartDom) return;
+    
+    const chart = echarts.init(chartDom);
+    
+    const hours = {{ last_24h_hours_json | safe }};
+    const counts = {{ last_24h_counts_json | safe }};
+    
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+            formatter: '{b}<br />调用次数: {c}次',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            borderColor: 'transparent',
+            textStyle: {
+                color: '#fff'
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '10%',
+            top: '10%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: hours,
+            axisLine: {
+                lineStyle: {
+                    color: 'var(--text-secondary)'
+                }
+            },
+            axisLabel: {
+                color: 'var(--text-secondary)',
+                fontSize: 11
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: 0,
+            axisLine: {
+                lineStyle: {
+                    color: 'var(--text-secondary)'
+                }
+            },
+            axisLabel: {
+                color: 'var(--text-secondary)',
+                fontSize: 11
+            },
+            splitLine: {
+                lineStyle: {
+                    color: 'var(--border)',
+                    type: 'dashed'
+                }
+            }
+        },
+        series: [
+            {
+                name: 'API调用次数',
+                type: 'line',
+                data: counts,
+                smooth: true,
+                lineStyle: {
+                    width: 3,
+                    color: '#4caf50'
+                },
+                itemStyle: {
+                    color: '#4caf50'
+                },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        {
+                            offset: 0,
+                            color: 'rgba(76, 175, 80, 0.4)'
+                        },
+                        {
+                            offset: 1,
+                            color: 'rgba(76, 175, 80, 0.05)'
+                        }
+                    ])
+                }
+            }
+        ]
+    };
+    
+    chart.setOption(option);
+    
+    // 窗口大小变化时重绘图表
+    window.addEventListener('resize', function() {
+        chart.resize();
+    });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 渲染API调用趋势图
+    renderApiCallsChart();
+    
+    // 页面加载2秒后加载备份列表
+    setTimeout(loadBackupList, 2000);
+    
+    // 绑定导入模态框事件
+    document.getElementById('import-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImportBackupModal();
+        }
+    });
+});
+
+// ==================== 备份文件管理 ====================
+
+// 导入备份功能
+function openImportBackupModal() {
+    document.getElementById('import-modal').style.display = 'flex';
+}
+
+function closeImportBackupModal() {
+    document.getElementById('import-modal').style.display = 'none';
+    document.getElementById('import-file-input').value = '';
+    document.getElementById('import-filename-display').textContent = '选择 .json 文件…';
+    document.getElementById('import-mode-merge').checked = true;
+}
+
+function handleImportFileChange(input) {
+    const fileName = input.files[0]?.name || '选择 .json 文件…';
+    document.getElementById('import-filename-display').textContent = fileName;
+}
+
+function submitImportBackup() {
+    const fileInput = document.getElementById('import-file-input');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('请先选择备份文件', 'error');
+        return;
+    }
+    
+    const mode = document.querySelector('input[name="import-mode-modal"]:checked').value;
+    
+    if (mode === 'overwrite' && !confirm('⚠️ 覆盖导入将清空所有现有数据，确定继续？')) {
+        return;
+    }
+    
     const fd = new FormData();
     fd.append('backup_file', file);
     fd.append('mode', mode);
-
-    const btn = event.target;
+    
+    const btn = document.querySelector('[onclick="submitImportBackup()"]');
+    const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.textContent = '导入中…';
-
+    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> 导入中...';
+    
     fetch('/admin/backup/import', { method: 'POST', body: fd })
         .then(r => r.json())
         .then(data => {
             btn.disabled = false;
-            btn.textContent = '开始导入';
-            const resultEl = document.getElementById('import-result');
-            resultEl.style.display = 'block';
+            btn.innerHTML = originalText;
+            
             if (data.success) {
-                resultEl.className = 'import-result-ok';
-                resultEl.textContent = '✅ ' + data.message;
-                showToast(data.message, 'success');
+                showToast('备份导入成功', 'success');
+                closeImportBackupModal();
+                loadBackupList(); // 重新加载备份列表
             } else {
-                resultEl.className = 'import-result-err';
-                resultEl.textContent = '❌ ' + data.message;
-                showToast(data.message, 'error');
+                showToast('导入失败: ' + data.message, 'error');
             }
         })
         .catch(e => {
             btn.disabled = false;
-            btn.textContent = '开始导入';
-            showToast('网络错误：' + e.message, 'error');
+            btn.innerHTML = originalText;
+            showToast('网络错误: ' + e.message, 'error');
         });
 }
+
+let backupList = [];
+
+// 加载备份列表
+function loadBackupList() {
+    const loadingEl = document.getElementById('backup-list-loading');
+    const emptyEl = document.getElementById('backup-list-empty');
+    const tableEl = document.getElementById('backup-list-table');
+    const tbodyEl = document.getElementById('backup-list-body');
+    
+    loadingEl.style.display = 'flex';
+    emptyEl.style.display = 'none';
+    tableEl.style.display = 'none';
+    
+    fetch('/admin/backup/list')
+        .then(r => r.json())
+        .then(data => {
+            loadingEl.style.display = 'none';
+            
+            if (data.success && data.backups && data.backups.length > 0) {
+                backupList = data.backups;
+                renderBackupList();
+                tableEl.style.display = 'table';
+            } else {
+                emptyEl.style.display = 'flex';
+            }
+        })
+        .catch(e => {
+            loadingEl.style.display = 'none';
+            emptyEl.style.display = 'flex';
+            showToast('加载备份列表失败: ' + e.message, 'error');
+        });
+}
+
+// 渲染备份列表
+function renderBackupList() {
+    const tbodyEl = document.getElementById('backup-list-body');
+    tbodyEl.innerHTML = '';
+    
+    backupList.forEach(backup => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${backup.filename}</strong></td>
+            <td>${backup.file_size_formatted}</td>
+            <td>
+                <span class="badge ${backup.backup_type === 'manual' ? 'badge-info' : 'badge-default'}">
+                    ${backup.backup_type === 'manual' ? '手动' : '自动'}
+                </span>
+            </td>
+            <td>${backup.created_at_formatted}</td>
+            <td>
+                <span class="backup-desc-text" title="${backup.description || '无描述'}">
+                    ${backup.description ? (backup.description.length > 30 ? backup.description.substring(0, 30) + '...' : backup.description) : '无描述'}
+                </span>
+            </td>
+            <td class="action-cell">
+                <button class="btn btn-ghost btn-xs" onclick="downloadBackup(${backup.id})" title="下载">
+                    📥 下载
+                </button>
+                <button class="btn btn-ghost btn-xs" onclick="restoreBackup(${backup.id})" title="恢复">
+                    🔄 恢复
+                </button>
+                <button class="btn btn-danger btn-xs" onclick="deleteBackup(${backup.id})" title="删除">
+                    🗑️ 删除
+                </button>
+            </td>
+        `;
+        tbodyEl.appendChild(row);
+    });
+}
+
+// 创建新备份
+function createNewBackup() {
+    if (!confirm('确定要创建新的备份文件吗？')) return;
+    
+    const btn = document.querySelector('[onclick="createNewBackup()"]');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> 创建中...';
+    
+    fetch('/admin/backup/create')
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            
+            if (data.success) {
+                showToast('备份创建成功', 'success');
+                loadBackupList(); // 重新加载列表
+            } else {
+                showToast('备份创建失败: ' + data.message, 'error');
+            }
+        })
+        .catch(e => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            showToast('创建备份失败: ' + e.message, 'error');
+        });
+}
+
+// 下载备份
+function downloadBackup(backupId) {
+    window.open(`/admin/backup/download/${backupId}`, '_blank');
+}
+
+// 恢复备份
+function restoreBackup(backupId) {
+    if (!confirm('⚠️ 恢复备份将覆盖现有数据，确定继续？')) return;
+    
+    const mode = prompt('选择恢复模式：\n1. 覆盖（清空现有数据后恢复）\n2. 合并（保留现有数据，只添加新数据）\n\n输入 "overwrite" 或 "merge":', 'overwrite');
+    
+    if (!mode || !['overwrite', 'merge'].includes(mode.toLowerCase())) {
+        showToast('请输入有效的恢复模式', 'error');
+        return;
+    }
+    
+    fetch(`/admin/backup/restore/${backupId}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mode: mode.toLowerCase()})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('备份恢复成功', 'success');
+        } else {
+            showToast('恢复失败: ' + data.message, 'error');
+        }
+    })
+    .catch(e => {
+        showToast('恢复失败: ' + e.message, 'error');
+    });
+}
+
+// 删除备份
+function deleteBackup(backupId) {
+    if (!confirm('确定要删除这个备份文件吗？此操作不可恢复！')) return;
+    
+    fetch(`/admin/backup/delete/${backupId}`, {method: 'DELETE'})
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast('备份已删除', 'success');
+                loadBackupList(); // 重新加载列表
+            } else {
+                showToast('删除失败: ' + data.message, 'error');
+            }
+        })
+        .catch(e => {
+            showToast('删除失败: ' + e.message, 'error');
+        });
+}
+
+// 刷新API统计数据
+function refreshApiStats() {
+    const refreshBtn = document.getElementById('refresh-api-stats');
+    const iconEl = document.getElementById('refresh-icon');
+    const textEl = document.getElementById('refresh-text');
+    
+    // 禁用按钮并显示加载状态
+    refreshBtn.disabled = true;
+    const originalIcon = iconEl.textContent;
+    const originalText = textEl.textContent;
+    iconEl.textContent = '⏳';
+    textEl.textContent = '刷新中...';
+    
+    // 简单的页面重新加载
+    setTimeout(() => {
+        // 模拟重新加载效果，但只刷新统计部分
+        const stats = document.querySelector('.stats-grid').querySelectorAll('.stat-number');
+        if (stats.length >= 3) {
+            // 给用户一个视觉反馈
+            stats.forEach(stat => {
+                const original = stat.textContent;
+                stat.textContent = '...';
+                setTimeout(() => {
+                    // 实际刷新页面
+                    location.reload();
+                }, 300);
+            });
+        } else {
+            location.reload();
+        }
+    }, 500);
+    
+    // 5秒后恢复按钮状态（保险）
+    setTimeout(() => {
+        refreshBtn.disabled = false;
+        iconEl.textContent = originalIcon;
+        textEl.textContent = '刷新';
+    }, 5000);
+}
+
+// 滚动到备份管理部分
+function scrollToBackupSection() {
+    const backupSection = document.querySelector('.backup-section');
+    if (backupSection) {
+        backupSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 可选：添加高亮效果
+        backupSection.style.border = '2px solid var(--primary-color)';
+        backupSection.style.borderRadius = '8px';
+        backupSection.style.transition = 'border 0.5s ease';
+        setTimeout(() => {
+            backupSection.style.border = '';
+        }, 2000);
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 页面加载2秒后加载备份列表
+    setTimeout(loadBackupList, 2000);
+    
+    // 绑定API统计刷新按钮事件
+    const refreshBtn = document.getElementById('refresh-api-stats');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshApiStats);
+    }
+});
 </script>
+
+<style>
+/* 导入模态框样式 */
+.import-mode-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+    margin-top: 3px;
+}
+
+.radio-label small {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+}
+
+.file-input-label {
+    display: inline-block;
+    padding: 12px 20px;
+    background: var(--bg-hover);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+    transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.file-input-label:hover {
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.import-file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(80vh - 70px);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+/* API统计卡片样式 */
+.stats-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    font-size: 24px;
+    margin-right: 16px;
+    opacity: 0.8;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* 图表区域样式 */
+.charts-section {
+    padding: 4px;
+}
+
+.charts-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.charts-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.charts-icon {
+    font-size: 24px;
+    opacity: 0.8;
+}
+
+.charts-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.charts-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.chart-container {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin-top: 8px;
+}
+
+/* 备份列表样式 */
+.backup-list-container {
+    margin-top: 20px;
+}
+
+.backup-list-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    gap: 16px;
+}
+
+.backup-list-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.backup-list-empty .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.backup-list-empty h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.backup-list-empty p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.backup-desc-text {
+    display: block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+</style>
 {% endblock %}

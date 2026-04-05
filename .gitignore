@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+svelte/
+share/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+env/
+.vscode/
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.DS_Store
+.idea/
+.vscode/
+
+# WorkBuddy
+.workbuddy/
+
+# Backup files
+backup/
+*.bak
+
+# Logs
+logs/
+
+# Testing
+coverage/
+.coverage
+*.cover
+htmlcov/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env/
+virtualenv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Project specific
+audiovisual.db
+start.cmd
+GitUpload.bat
+
+# Python bytecode
+*.pyc
+__pycache__/
+
+# Temp files
+*.tmp
+*.temp
+
+# Log files
+*.log
