@@ -8,6 +8,11 @@ REM ==================================================
 echo ======== AudioVisual Git 快速上传 ========
 echo.
 
+REM 定义换行符变量
+for /f %%a in ('copy /Z "%~dpf0" nul') do set "CR=%%a"
+set LF=^
+
+
 REM 检查Git环境
 git --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
@@ -48,15 +53,24 @@ set "DAY=%DATETIME:~6,2%"
 set "HOUR=%DATETIME:~8,2%"
 set "MINUTE=%DATETIME:~10,2%"
 
-set "COMMIT_MSG=AudioVisual 更新（%YEAR%-%MONTH%-%DAY% %HOUR%:%MINUTE%）
-
-主要内容：
-• 视频解析平台完整版本
-• 修复时区问题，支持多时区配置
-• 新增智能解析系统
-• 完善API文档和测试工具
-• 完成文档系统（README/README_GIT/docs）
-• 更新为生产环境默认配置"
+REM 使用安全的字符串构建方式
+setlocal enabledelayedexpansion
+set "COMMIT_MSG=AudioVisual 更新（%YEAR%-%MONTH%-%DAY% %HOUR%:%MINUTE%）"
+set "COMMIT_MSG=!COMMIT_MSG!%LF%%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!主要内容："
+set "COMMIT_MSG=!COMMIT_MSG!%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!• 视频解析平台完整版本"
+set "COMMIT_MSG=!COMMIT_MSG!%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!• 修复时区问题，支持多时区配置"
+set "COMMIT_MSG=!COMMIT_MSG!%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!• 新增智能解析系统"
+set "COMMIT_MSG=!COMMIT_MSG!%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!• 完善API文档和测试工具"
+set "COMMIT_MSG=!COMMIT_MSG!%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!• 完成文档系统（README/README_GIT/docs）"
+set "COMMIT_MSG=!COMMIT_MSG!%LF%"
+set "COMMIT_MSG=!COMMIT_MSG!• 更新为生产环境默认配置"
+endlocal & set "COMMIT_MSG=%COMMIT_MSG%"
 
 echo.
 echo 提交信息：
