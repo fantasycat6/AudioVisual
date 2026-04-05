@@ -75,8 +75,7 @@ Desktop.ini
 
 # Project specific
 audiovisual.db
-start.cmd
-GitUpload.bat
+GitUpload.cmd
 
 # Python bytecode
 *.pyc
