@@ -47,6 +47,9 @@ def login():
             if request.is_json:
                 return jsonify({'success': True, 'redirect': url_for('main.index')})
             next_page = request.args.get('next')
+            # 若 next 指向 API 路径（返回 JSON 而非 HTML），则返回主页
+            if next_page and next_page.startswith('/api/'):
+                return redirect(url_for('main.index'))
             return redirect(next_page or url_for('main.index'))
         else:
             if request.is_json:

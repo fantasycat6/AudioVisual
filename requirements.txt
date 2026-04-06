@@ -5,5 +5,3 @@ Werkzeug>=3.0.0
 requests>=2.31.0
 python-dotenv>=1.0.0
 pytz>=2024.1
-# MySQL 支持（可选，使用 MySQL 时需要安装）
-# PyMySQL>=1.1.0

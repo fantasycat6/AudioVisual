@@ -342,22 +342,7 @@ a:hover { color: var(--accent-hover); }
 .btn-xs { padding: 3px 8px; font-size: 12px; }
 .btn-full { width: 100%; justify-content: center; }
 
-.btn-parse {
-    background: linear-gradient(135deg, var(--accent), #ff4088);
-    color: white;
-    padding: 12px 28px;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    border-radius: var(--radius-sm);
-    border: none;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 20px rgba(255, 103, 104, 0.4);
-    white-space: nowrap;
-}
-.btn-parse:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(255, 103, 104, 0.6); }
-.btn-parse:active { transform: translateY(0); }
+
 
 /* ===== 主内容 ===== */
 .main-content { min-height: calc(100vh - 120px); padding-bottom: 40px; }
@@ -457,35 +442,7 @@ a:hover { color: var(--accent-hover); }
 }
 .clear-btn:hover { color: var(--text-primary); }
 
-.api-select-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 8px 12px;
-}
-.select-label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-muted);
-    font-size: 13px;
-    white-space: nowrap;
-}
 
-.api-select {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-primary);
-    font-size: 14px;
-    cursor: pointer;
-    padding-right: 8px;
-    min-width: 150px;
-}
-.api-select option { background: var(--bg-card); }
 
 .parse-tips {
     display: flex;
@@ -993,8 +950,7 @@ a:hover { color: var(--accent-hover); }
     .nav-links .nav-link span:not(.active) { display: none; }
     .page-container { padding: 20px 16px; }
     .parse-input-area { flex-direction: column; }
-    .url-input-group, .api-select-group { width: 100%; }
-    .btn-parse { width: 100%; }
+    .url-input-group { width: 100%; }
     .drama-card-inner { flex-direction: column; }
     .drama-actions { flex-direction: row; }
     .platforms-grid { gap: 8px; }

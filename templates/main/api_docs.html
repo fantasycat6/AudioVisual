@@ -52,24 +52,57 @@
 
         <div class="api-basics-content">
             <div class="info-card">
-                <h4>核心功能</h4>
-                <p>视频解析平台提供多个API接口，主要用于：</p>
+                <h4>核心 API 功能</h4>
+                <p>视频解析平台现已简化并专注于以下核心功能：</p>
                 <ul>
-                    <li><strong>智能视频解析</strong>：自动尝试多个解析接口，直到找到可用的</li>
-                    <li><strong>快速接口获取</strong>：获取当前所有可用的解析接口列表</li>
-                    <li><strong>影视导航</strong>：获取影视资源导航网站列表</li>
-                    <li><strong>用户管理</strong>：用户认证和权限验证</li>
+                    <li>
+                        <strong>🔍 智能视频解析（主推）</strong>： 
+                        <ul style="margin:8px 0 8px 15px; font-size:13px; color:var(--text-secondary);">
+                            <li>唯一解析接口：<code>/api/parse/smart</code></li>
+                            <li>自动尝试多个接口，失败后自动切换</li>
+                            <li>支持 <code>api_key</code> 参数，无需登录即可调用</li>
+                            <li>支持 <code>type=video</code> 直链播放页生成</li>
+                        </ul>
+                    </li>
+                    <li><strong>📋 接口列表查询</strong>：获取当前所有可用的解析接口（<code>/api/parse/quick</code>）</li>
+                    <li><strong>🎬 影视导航目录</strong>：获取推荐的影视导航网站列表（<code>/api/drama-sites</code>）</li>
+                    <li><strong>🔐 API Key 集成</strong>：完善的密钥认证体系，支持第三方集成和自动化调用</li>
                 </ul>
+                <div style="margin-top:12px; padding:10px; background:rgba(255,215,0,0.05); border:1px solid rgba(255,215,0,0.2); border-radius:6px;">
+                    <strong>⚠️ 重要更新：</strong> 传统解析接口 <code>/parse</code> 已移除，建议所有新项目使用 <code>/api/parse/smart</code> 配合 <code>api_key</code> 参数。
+                </div>
             </div>
 
             <div class="info-card">
                 <h4>认证要求</h4>
-                <p>所有API接口都需要用户登录认证，通过以下方式验证：</p>
+                <p>API 接口支持两种认证方式：</p>
                 <ul>
-                    <li>使用 <code>Flask-Login</code> 进行用户会话管理</li>
-                    <li>每个请求都需要有效的登录会话Cookie</li>
+                    <li>
+                        <strong>Session 登录（默认）</strong>：浏览器登录后直接调用，适合在平台内使用Web界面
+                    </li>
+                    <li>
+                        <strong>API Key 认证（推荐）</strong>：适合外部调用、第三方集成和直链播放（如 <code>type=video</code> 播放页直链）
+                        <ul style="margin-top:6px;">
+                            <li>在 <a href="{{ url_for('main.profile') }}" style="color:var(--accent);">用户中心</a> 生成个人 API Key</li>
+                            <li>通过 URL 参数传递：<code>?api_key=av_xxxxx</code>（直接在API调用中使用）</li>
+                            <li>或通过请求头传递：<code>X-API-Key: av_xxxxx</code> 或 <code>Authorization: Bearer av_xxxxx</code></li>
+                            <li>API Key 错误时，接口将静默拒绝（403），不会给出任何提示</li>
+                        </ul>
+                    </li>
                     <li>部分接口需要管理员权限（如管理后台相关API）</li>
                 </ul>
+                <div style="margin-top:16px; padding:12px; background:var(--card-bg-light); border:1px solid rgba(255,255,255,0.05); border-radius:8px; font-size:14px;">
+                    <strong>🔐 API Key 使用建议：</strong>
+                    <ul style="margin-top:8px; margin-bottom:0;">
+                        <li><strong>外部调用必须使用</strong>：如果没有有效的Session登录，必须通过 <code>api_key</code> 参数或请求头传递API Key</li>
+                        <li><strong>优先使用URL参数</strong>：在智能解析等API调用中，直接在URL中添加 <code>api_key</code> 参数最为方便</li>
+                        <li><strong>多平台集成</strong>：API Key是实现第三方集成的核心，可用于移动应用、桌面应用等任意平台</li>
+                        <li><strong>直链播放页</strong>：通过 <code>type=video&api_key=av_xxxxx</code> 组合，可以直接生成播放页链接，无需登录即可观看</li>
+                    </ul>
+                    <div style="margin-top:12px; padding:8px; background:var(--accent); color:white; border-radius:4px; font-size:12px;">
+                        💡 <strong>智能解析 API Key 格式：</strong> <code>/api/parse/smart?video_url=...&api_key=av_xxxxx&type=video</code>
+                    </div>
+                </div>
             </div>
 
             <div class="info-card">
@@ -100,79 +133,222 @@
         <div class="api-samples-content">
             <div class="info-card">
                 <h4>JavaScript (Fetch API)</h4>
-                <pre><code class="language-javascript">// 智能解析API调用示例
+                <pre><code class="language-javascript">// ── 方式一：Session 登录（浏览器内调用）──
 async function smartParseVideo(videoUrl) {
-    try {
-        const response = await fetch(`/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            console.log('解析成功:', data.parse_url);
-            // 加载视频播放器
-            document.getElementById('video-iframe').src = data.parse_url;
-        } else {
-            console.error('解析失败:', data.message);
-        }
-    } catch (error) {
-        console.error('请求失败:', error);
+    const response = await fetch(`/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}`);
+    const data = await response.json();
+    if (data.success) {
+        document.getElementById('video-iframe').src = data.parse_url;
     }
 }
 
-// 获取解析接口列表
-async function getParseAPIs() {
-    try {
-        const response = await fetch('/api/parse/quick');
-        const data = await response.json();
-        
-        if (data.success) {
-            console.log('可用接口:', data.apis);
-            return data.apis;
-        }
-    } catch (error) {
-        console.error('获取接口失败:', error);
+// ── 方式二：API Key 外部调用（推荐）──
+const API_KEY = 'av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // 从用户中心获取
+
+// 1. 智能解析 + API Key（返回 JSON）
+async function smartParseWithKey(videoUrl) {
+    const url = `/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}&api_key=${API_KEY}`;
+    const data = await fetch(url).then(r => r.json());
+    console.log("解析成功：", data.parse_url);
+    return data.parse_url;
+}
+
+// 2. 智能解析 + API Key + 直链播放页（type=video）
+function openVideoPage(videoUrl) {
+    const url = `/api/parse/smart?type=video&video_url=${encodeURIComponent(videoUrl)}&api_key=${API_KEY}`;
+    window.open(url, '_blank');
+}
+
+// 3. 完整参数智能解析（高级用法）
+async function completeSmartParse(videoUrl, maxRetries = 3, startApiId = null) {
+    let url = `/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}&api_key=${API_KEY}&max_retries=${maxRetries}`;
+    if (startApiId) {
+        url += `&api_id=${startApiId}`;
     }
+    const data = await fetch(url).then(r => r.json());
+    console.log("尝试了以下接口：", data.tried_apis);
+    return data;
+}
+
+// 4. 在 iframe 中嵌入播放页
+function embedVideoInIframe(iframeId, videoUrl) {
+    const url = `/api/parse/smart?type=video&video_url=${encodeURIComponent(videoUrl)}&api_key=${API_KEY}`;
+    document.getElementById(iframeId).src = url;
 }</code></pre>
             </div>
 
             <div class="info-card">
-                <h4>Python (requests库)</h4>
+                <h4>Python (requests 库)</h4>
                 <pre><code class="language-python">import requests
+from typing import Optional, Dict, Any
 
-def smart_parse_video(video_url):
-    """智能解析视频链接"""
-    url = f"http://your-domain/api/parse/smart"
-    params = {"video_url": video_url}
+BASE = 'http://your-domain'
+API_KEY = 'av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'  # 从用户中心获取
+
+def smart_parse_video(video_url: str, api_key: str = API_KEY, max_retries: int = 3,
+                     start_api_id: Optional[int] = None, response_type: str = 'json') -> Optional[str]:
+    """
+    智能解析视频URL（使用API Key）
+    :param video_url: 视频链接（必填）
+    :param api_key: API密钥（必填，用于外部调用）
+    :param max_retries: 最大尝试次数（默认3）
+    :param start_api_id: 起始接口ID（可选）
+    :param response_type: 响应类型 'json'（默认）或 'video'（直链播放页）
+    :return: 解析成功的URL，失败返回None
+    """
+    params = {
+        'video_url': video_url,
+        'api_key': api_key,
+        'max_retries': max_retries,
+        'type': response_type
+    }
+    if start_api_id:
+        params['api_id'] = start_api_id
     
-    # 需要先登录获取session
-    session = requests.Session()
-    # 登录代码略...
+    resp = requests.get(f'{BASE}/api/parse/smart', params=params)
+    data = resp.json()
     
-    response = session.get(url, params=params)
-    data = response.json()
-    
-    if data['success']:
-        print(f"解析成功，使用接口: {data['api_name']}")
-        print(f"播放链接: {data['parse_url']}")
-        return data['parse_url']
+    if data.get('success'):
+        if response_type == 'video':
+            return resp.url  # 直链播放页URL
+        else:
+            return data['parse_url']  # JSON模式下的解析URL
     else:
-        print(f"解析失败: {data['message']}")
-        return None</code></pre>
+        print(f"解析失败：{data.get('message', '未知错误')}")
+        return None
+
+# 获取播放页直链（无需登录，适合第三方嵌入）
+def get_video_page_url(video_url: str, api_key: str = API_KEY) -> str:
+    """
+    生成视频播放页直链
+    :param video_url: 视频链接
+    :param api_key: API密钥
+    :return: 可以直接在浏览器中打开的播放页URL
+    """
+    video_escaped = requests.utils.quote(video_url, safe='')
+    return f'{BASE}/api/parse/smart?type=video&video_url={video_escaped}&api_key={api_key}'
+
+# 高级用法：批量处理多个视频
+def batch_parse_videos(video_urls: list, api_key: str = API_KEY) -> Dict[str, Optional[str]]:
+    """
+    批量解析多个视频
+    :param video_urls: 视频链接列表
+    :param api_key: API密钥
+    :return: 字典 {视频URL: 解析后的URL}
+    """
+    results = {}
+    for video_url in video_urls:
+        try:
+            parse_url = smart_parse_video(video_url, api_key)
+            results[video_url] = parse_url
+            print(f"✓ {video_url[:30]}... → {parse_url[:50] if parse_url else '失败'}...")
+        except Exception as e:
+            results[video_url] = None
+            print(f"✗ {video_url[:30]}... → 异常: {e}")
+    return results
+
+# 快速调用示例
+if __name__ == "__main__":
+    # 示例1：JSON响应（获取解析URL）
+    parsed_url = smart_parse_video("https://v.qq.com/x/cover/mzc002004qoigq3.html", API_KEY)
+    if parsed_url:
+        print(f"解析成功，播放链接: {parsed_url}")
+    
+    # 示例2：生成直链播放页（iframe嵌入）
+    direct_link = get_video_page_url("https://v.qq.com/x/cover/mzc002004qoigq3.html", API_KEY)
+    print(f"播放页直链: {direct_link}")
+    
+    # 示例3：批量解析
+    video_list = [
+        "https://v.qq.com/x/cover/abc123.html",
+        "https://www.iqiyi.com/v_abc456.html"
+    ]
+    batch_results = batch_parse_videos(video_list, API_KEY)
+    print(f"\n批量解析完成，成功: {sum(1 for v in batch_results.values() if v)} 个")</code></pre>
             </div>
 
             <div class="info-card">
-                <h4>快速CURL命令测试</h4>
-                <pre><code class="language-bash"># 智能解析测试（需先登录获取cookie）
+                <h4>快速 CURL 命令测试</h4>
+                <pre><code class="language-bash"># ===============================
+# 智能解析 API (推荐使用API Key)
+# ===============================
+
+# ── 1. 带有 API Key 的完整智能解析 ──
+# 返回完整 JSON 响应（推荐开发调试）
 curl -G "http://localhost:5000/api/parse/smart" \
   --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
-  -H "Cookie: session=YOUR_SESSION_COOKIE"
+  -d "api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
-# 获取解析接口列表
+# 只查看解析结果（简洁格式）
+curl -s "http://localhost:5000/api/parse/smart?video_url=https%3A%2F%2Fv.qq.com%2Fx%2Fcover%2Fmzc002004qoigq3.html&api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" | jq '.parse_url'
+
+# 指定起始接口和最大尝试次数
+curl -G "http://localhost:5000/api/parse/smart" \
+  --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
+  -d "api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  -d "api_id=1" \
+  -d "max_retries=5"
+
+# ── 2. 获取直链播放页（type=video） ──
+# 生成播放页链接（可在浏览器直接打开或嵌入iframe）
+curl -s "http://localhost:5000/api/parse/smart?type=video&api_key=av_xxx&video_url=https%3A%2F%2Fv.qq.com%2F..." -L -I | head -5
+
+# 直接打开（将链接复制到浏览器）
+# http://localhost:5000/api/parse/smart?type=video&api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&video_url=https%3A%2F%2Fv.qq.com%2F...
+
+# ── 3. 使用请求头的 API Key ──
+# 通过 X-API-Key 请求头传递
+curl -G "http://localhost:5000/api/parse/smart" \
+  --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
+  -H "X-API-Key: av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 通过 Authorization 请求头传递
+curl -G "http://localhost:5000/api/parse/smart" \
+  --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
+  -H "Authorization: Bearer av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ===============================
+# 辅助 API (可用 API Key 或 Session)
+# ===============================
+
+# ── 4. 获取所有解析接口列表 ──
+# 使用 API Key
+curl -G "http://localhost:5000/api/parse/quick" \
+  -d "api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 使用 Session（需已登录）
 curl -G "http://localhost:5000/api/parse/quick" \
   -H "Cookie: session=YOUR_SESSION_COOKIE"
 
-# 获取影视导航列表
+# ── 5. 获取影视导航列表 ──
+# 使用 API Key
 curl -G "http://localhost:5000/api/drama-sites" \
-  -H "Cookie: session=YOUR_SESSION_COOKIE"</code></pre>
+  -d "api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 使用 Session
+curl -G "http://localhost:5000/api/drama-sites" \
+  -H "Cookie: session=YOUR_SESSION_COOKIE"
+
+# ===============================
+# 错误处理与调试
+# ===============================
+
+# 错误：缺少 API Key
+curl -s "http://localhost:5000/api/parse/smart?video_url=https%3A%2F%2Fv.qq.com%2F..." | jq '.'
+
+# 错误：无效 API Key（静默返回403）
+curl -s "http://localhost:5000/api/parse/smart?video_url=https%3A%2F%2Fv.qq.com%2F...&api_key=invalid_key" | jq '.'
+
+# 详细输出（可用于调试）
+curl -v -G "http://localhost:5000/api/parse/smart" \
+  --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
+  -d "api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 保存响应到文件
+curl -G "http://localhost:5000/api/parse/smart" \
+  --data-urlencode "video_url=https://v.qq.com/x/cover/mzc002004qoigq3.html" \
+  -d "api_key=av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  -o response.json</code></pre>
             </div>
         </div>
     </div>
@@ -201,10 +377,12 @@ curl -G "http://localhost:5000/api/drama-sites" \
                         <td><strong>智能解析</strong></td>
                         <td><code>/api/parse/smart</code></td>
                         <td><span class="method-get">GET</span></td>
-                        <td>自动尝试多个解析接口，失败自动切换</td>
+                        <td>自动尝试多个解析接口，失败自动切换（推荐使用）</td>
                         <td>
-                            <code>video_url</code> (必填)<br>
-                            <code>api_id</code> (可选)<br>
+                            <code>video_url</code> (必填，视频链接)<br>
+                            <code>api_key</code> (可选，用于外部调用身份验证)<br>
+                            <code>type</code> (可选，<code>json</code>/<code>video</code>，默认 <code>json</code>)<br>
+                            <code>api_id</code> (可选，指定起始接口ID)<br>
                             <code>max_retries</code> (可选，默认3)
                         </td>
                         <td><a href="#" onclick="showApiExample('smart', event)">查看示例</a></td>
@@ -232,17 +410,6 @@ curl -G "http://localhost:5000/api/drama-sites" \
                         <td>获取所有启用状态的影视导航网站</td>
                         <td>无</td>
                         <td><a href="#" onclick="showApiExample('drama', event)">查看示例</a></td>
-                    </tr>
-                    <tr>
-                        <td><strong>传统解析</strong></td>
-                        <td><code>/parse</code></td>
-                        <td><span class="method-get">GET</span></td>
-                        <td>传统视频解析页面（iframe嵌入）</td>
-                        <td>
-                            <code>video_url</code> (必填)<br>
-                            <code>api_id</code> (可选)
-                        </td>
-                        <td><a href="#" onclick="showApiExample('parse', event)">查看示例</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -294,6 +461,24 @@ curl -G "http://localhost:5000/api/drama-sites" \
                 <button class="btn btn-secondary" onclick="testQuickParse(event)">测试快速解析</button>
                 <div class="test-result" style="margin-top: 16px;">
                     <pre id="quick-parse-result">点击上方按钮开始测试...</pre>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h4>解析接口列表测试</h4>
+                <p>获取所有启用状态的解析接口（JSON格式）</p>
+                <button class="btn btn-secondary" onclick="testApiList(event)">测试解析接口列表</button>
+                <div class="test-result" style="margin-top: 16px;">
+                    <pre id="api-list-result">点击上方按钮开始测试...</pre>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <h4>影视导航列表测试</h4>
+                <p>获取所有启用状态的影视导航网站列表（JSON格式）</p>
+                <button class="btn btn-secondary" onclick="testDramaSites(event)">测试影视导航列表</button>
+                <div class="test-result" style="margin-top: 16px;">
+                    <pre id="drama-sites-result">点击上方按钮开始测试...</pre>
                 </div>
             </div>
         </div>
@@ -474,10 +659,7 @@ function showApiExample(apiType, event) {
         'drama': `[
     {"id": 1, "name": "奈菲影视", "url": "https://www.naifei.tv", "description": "最新最全的影视资源", "icon": "🎬", "is_enabled": true, "sort_order": 1},
     {"id": 2, "name": "豌豆影视", "url": "https://www.wandou.tv", "description": "高清影视在线观看", "icon": "🍿", "is_enabled": true, "sort_order": 2}
-]`,
-        'parse': `{
-    "html": "<iframe src='https://jx.example.com/?url=https://v.qq.com/x/cover/xxx.html'></iframe>"
-}`
+]`
     };
     
     document.getElementById('api-example-code').textContent = examples[apiType];
@@ -543,6 +725,46 @@ function testQuickParse(event) {
         })
         .catch(error => {
             document.getElementById('quick-parse-result').textContent = 
+                `测试失败: ${error.message}`;
+        });
+}
+
+function testApiList(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    document.getElementById('api-list-result').textContent = '正在测试中...';
+    
+    fetch('/api/apis')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('api-list-result').textContent = 
+                JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById('api-list-result').textContent = 
+                `测试失败: ${error.message}`;
+        });
+}
+
+function testDramaSites(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    document.getElementById('drama-sites-result').textContent = '正在测试中...';
+    
+    fetch('/api/drama-sites')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('drama-sites-result').textContent = 
+                JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            document.getElementById('drama-sites-result').textContent = 
                 `测试失败: ${error.message}`;
         });
 }

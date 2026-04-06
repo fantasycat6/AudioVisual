@@ -6,12 +6,21 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from timezone_util import format_china_time, get_app_time_now
+import secrets
+import string
 
 db = SQLAlchemy()
 
 def app_time_now():
     """获取当前应用时区时间，用于数据库字段默认值"""
     return datetime.now()  # 直接使用本地时间，不使用时区信息
+
+
+def _generate_api_key():
+    """生成格式为 av_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 的 API Key（前缀+36位随机字母数字）"""
+    alphabet = string.ascii_letters + string.digits
+    random_part = ''.join(secrets.choice(alphabet) for _ in range(36))
+    return f'av_{random_part}'
 
 
 class User(UserMixin, db.Model):
@@ -26,11 +35,26 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=app_time_now)
     last_login = db.Column(db.DateTime, nullable=True)
 
+    # API Key 认证（用于无登录态的 API 调用，如 type=video 直链）
+    api_key = db.Column(db.String(64), unique=True, nullable=True, index=True)
+    api_key_created_at = db.Column(db.DateTime, nullable=True)
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def generate_api_key(self):
+        """生成新的 API Key，并更新创建时间"""
+        self.api_key = _generate_api_key()
+        self.api_key_created_at = datetime.now()
+        return self.api_key
+
+    def revoke_api_key(self):
+        """撤销 API Key"""
+        self.api_key = None
+        self.api_key_created_at = None
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -93,7 +117,7 @@ class APICallLog(db.Model):
     __tablename__ = 'api_call_logs'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # API Key 调用时也可记录
     api_type = db.Column(db.String(20), nullable=False)  # 'smart_parse', 'quick_parse', 'normal'
     video_url = db.Column(db.String(500), nullable=False)
     success = db.Column(db.Boolean, default=True)

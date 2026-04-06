@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}解析失败{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h2 class="page-title">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+                </svg>
+                解析失败
+            </h2>
+            <p class="page-desc">抱歉，视频链接无法解析</p>
+        </div>
+    </div>
+
+    <div class="parse-card">
+        <div class="parse-error-box">
+            <div class="error-icon">
+                ⚠️
+            </div>
+            <div class="error-content">
+                <h3 class="error-title">视频链接无法解析</h3>
+                <p class="error-desc">
+                    尝试解析以下链接时遇到了问题：
+                </p>
+                <div class="error-url">
+                    <code>{{ video_url }}</code>
+                </div>
+                
+                {% if error %}
+                <div class="error-detail">
+                    <strong>详细错误：</strong>
+                    <span class="error-message">{{ error }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="error-suggestions">
+                    <h4>建议操作：</h4>
+                    <ul>
+                        <li>✅ 确认视频链接是否有效</li>
+                        <li>✅ 检查链接是否来自支持的平台（腾讯、爱奇艺、优酷、B站等）</li>
+                        <li>✅ 稍后重试，可能是解析接口暂时不可用</li>
+                        <li>✅ 尝试手动选择其他解析接口</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="error-actions">
+                <a href="/" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    返回首页
+                </a>
+                <a href="/?video_url={{ video_url|urlencode }}" class="btn btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                    重新解析
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.parse-error-box {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,0,0,0.15);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    color: #ff9800;
+}
+
+.error-title {
+    color: #ff9800;
+    margin-bottom: 12px;
+    font-size: 24px;
+}
+
+.error-desc {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.error-url {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    word-break: break-all;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 14px;
+    color: #ffb74d;
+}
+
+.error-detail {
+    background: rgba(244,67,54,0.1);
+    border: 1px solid rgba(244,67,54,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.error-message {
+    color: #f44336;
+    font-family: monospace;
+}
+
+.error-suggestions {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 32px;
+    text-align: left;
+}
+
+.error-suggestions h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+}
+
+.error-suggestions ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.error-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+</style>
+{% endblock %}

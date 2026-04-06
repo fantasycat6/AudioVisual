@@ -199,6 +199,96 @@ function requestAdminRole() {
 function showSecurityInfo() {
     showToast('🔒 保持账户安全是每个人的责任！', 'info');
 }
+
+// ============ API Key 管理 ============
+
+function generateApiKey() {
+    const btn = document.getElementById('generateKeyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> 生成中...';
+
+    fetch('/profile/api-key/generate', { method: 'POST', headers: { 'X-CSRFToken': '' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showApiKey(data.api_key, data.created_at);
+                showToast('✅ API Key 已生成', 'success');
+            } else {
+                showToast(data.message || '生成失败', 'error');
+            }
+        })
+        .catch(() => showToast('网络错误，请稍后重试', 'error'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '🔄 重新生成';
+        });
+}
+
+function showApiKey(key, createdAt) {
+    const box = document.getElementById('apiKeyBox');
+    const display = document.getElementById('apiKeyDisplay');
+    const ts = document.getElementById('apiKeyCreatedAt');
+    const placeholder = document.getElementById('apiKeyPlaceholder');
+    const revokeBtn = document.getElementById('revokeKeyBtn');
+
+    display.textContent = key;
+    if (ts && createdAt) ts.textContent = '生成于 ' + createdAt;
+    box.style.display = 'flex';
+    if (placeholder) placeholder.style.display = 'none';
+    if (revokeBtn) revokeBtn.style.display = 'inline-flex';
+}
+
+function copyApiKey() {
+    const key = document.getElementById('apiKeyDisplay').textContent;
+    if (!key || key === '—') { showToast('暂无 API Key', 'error'); return; }
+    navigator.clipboard.writeText(key)
+        .then(() => showToast('✅ 已复制到剪贴板', 'success'))
+        .catch(() => {
+            // 降级方案
+            const ta = document.createElement('textarea');
+            ta.value = key;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('✅ 已复制', 'success');
+        });
+}
+
+function toggleKeyVisibility() {
+    const display = document.getElementById('apiKeyDisplay');
+    const btn = document.getElementById('toggleVisBtn');
+    if (display.style.filter === 'blur(6px)') {
+        display.style.filter = 'none';
+        btn.textContent = '🙈 隐藏';
+    } else {
+        display.style.filter = 'blur(6px)';
+        btn.textContent = '👁 显示';
+    }
+}
+
+function confirmRevokeKey() {
+    if (!confirm('确定要撤销 API Key 吗？撤销后所有使用该 Key 的直链将立即失效，且无法恢复。')) return;
+    const btn = document.getElementById('revokeKeyBtn');
+    btn.disabled = true;
+
+    fetch('/profile/api-key/revoke', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const box = document.getElementById('apiKeyBox');
+                const placeholder = document.getElementById('apiKeyPlaceholder');
+                const generateBtn = document.getElementById('generateKeyBtn');
+                box.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
+                if (generateBtn) generateBtn.innerHTML = '🔑 生成 API Key';
+                btn.style.display = 'none';
+                showToast('API Key 已撤销', 'info');
+            }
+        })
+        .catch(() => showToast('操作失败', 'error'))
+        .finally(() => { btn.disabled = false; });
+}
 </script>
 {% endblock %}
 
@@ -343,6 +433,58 @@ function showSecurityInfo() {
                 <div class="feature-action">
                     <button class="btn btn-warning btn-sm" onclick="showSecurityInfo()">
                         了解更多
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Key 管理卡片 -->
+            <div class="feature-card feature-card-api">
+                <div class="feature-icon feature-icon-api">
+                    🔑
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">API Key</h3>
+                    <p class="feature-desc">生成个人 API Key，无需登录即可通过直链访问智能解析接口（如 <code style="font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;">type=video</code> 播放页）。</p>
+
+                    <!-- 无 Key 提示 -->
+                    {% if not current_user.api_key %}
+                    <div id="apiKeyPlaceholder" class="apikey-placeholder">
+                        <span>🔒 暂未生成 API Key</span>
+                    </div>
+                    {% else %}
+                    <div id="apiKeyPlaceholder" style="display:none;" class="apikey-placeholder">
+                        <span>🔒 暂未生成 API Key</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Key 展示区 -->
+                    <div id="apiKeyBox" class="apikey-box" style="{{ '' if current_user.api_key else 'display:none;' }}">
+                        <code id="apiKeyDisplay" class="apikey-value" style="filter:blur(6px);">{{ current_user.api_key or '' }}</code>
+                        <div class="apikey-actions-row">
+                            <button class="apikey-btn" id="toggleVisBtn" onclick="toggleKeyVisibility()">👁 显示</button>
+                            <button class="apikey-btn" onclick="copyApiKey()">📋 复制</button>
+                        </div>
+                    </div>
+                    <div class="apikey-meta">
+                        <span id="apiKeyCreatedAt">
+                        {% if current_user.api_key_created_at %}
+                            生成于 {{ current_user.api_key_created_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="apikey-warning">
+                        ⚠️ 请妥善保管 Key，泄露后请立即撤销并重新生成。撤销后所有使用该 Key 的直链立即失效。
+                    </div>
+                </div>
+                <div class="feature-action" style="gap:8px;">
+                    <button class="btn btn-api btn-sm" id="generateKeyBtn" onclick="generateApiKey()">
+                        {{ '🔄 重新生成' if current_user.api_key else '🔑 生成 API Key' }}
+                    </button>
+                    <button class="btn btn-danger-soft btn-sm" id="revokeKeyBtn"
+                            onclick="confirmRevokeKey()"
+                            style="{{ '' if current_user.api_key else 'display:none;' }}">
+                        🗑 撤销
                     </button>
                 </div>
             </div>
@@ -1656,6 +1798,139 @@ function showSecurityInfo() {
     .modal-medium {
         margin: 10px;
     }
+}
+
+/* ===== API Key 卡片样式 ===== */
+.feature-card-api {
+    border-color: rgba(103, 194, 255, 0.2);
+    background: linear-gradient(135deg,
+        rgba(30, 60, 80, 0.85) 0%,
+        rgba(30, 50, 70, 0.85) 100%);
+}
+.feature-icon-api {
+    background: rgba(103, 194, 255, 0.15);
+    color: #67c2ff;
+}
+
+/* Key 占位文字 */
+.apikey-placeholder {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    border: 1px dashed rgba(255,255,255,0.12);
+    margin-bottom: 10px;
+}
+
+/* Key 展示框 */
+.apikey-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(103,194,255,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+}
+.apikey-value {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #a8d8ff;
+    word-break: break-all;
+    flex: 1;
+    min-width: 0;
+    transition: filter 0.3s ease;
+    user-select: all;
+}
+.apikey-actions-row {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.apikey-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.apikey-btn:hover {
+    background: rgba(255,255,255,0.14);
+    color: var(--text-primary);
+}
+.apikey-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    min-height: 16px;
+}
+
+/* 安全警告 */
+.apikey-warning {
+    font-size: 12px;
+    color: #ffb84d;
+    background: rgba(255,184,77,0.08);
+    border: 1px solid rgba(255,184,77,0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+/* API Key 生成按钮 */
+.btn-api {
+    background: linear-gradient(135deg, #1e7fc0, #1565a8);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(30,127,192,0.35);
+    transition: all 0.3s ease;
+}
+.btn-api:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(30,127,192,0.45);
+}
+
+/* 撤销按钮 */
+.btn-danger-soft {
+    background: rgba(244,67,54,0.12);
+    color: #f44336;
+    border: 1px solid rgba(244,67,54,0.28);
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+.btn-danger-soft:hover {
+    background: rgba(244,67,54,0.22);
+    transform: translateY(-2px);
+}
+
+/* feature-action 多按钮时 flex 对齐 */
+.feature-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: auto;
+    flex-wrap: wrap;
 }
 </style>
 {% endblock %}

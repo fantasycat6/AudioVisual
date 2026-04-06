@@ -12,6 +12,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from timezone_util import get_app_time_now, format_china_time
+import time
+import threading
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -631,3 +633,9 @@ def delete_backup(backup_id):
         'success': True,
         'message': '备份已删除'
     })
+
+
+
+
+
+

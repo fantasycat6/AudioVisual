@@ -1,12 +1,14 @@
-# 🎬 AudioVisual Web — 专业视频解析平台
+# 🎬 AudioVisual Web — 简洁高效视频解析平台
 
 > 从 [AudioVisual](https://github.com/RemotePinee/AudioVisual) Electron 桌面应用提取并重构为现代化的 Python Flask Web 版本。  
-> 支持多解析接口、智能解析、影视导航，并提供完整的管理后台与API系统。
+> 专注于视频解析核心功能，支持多接口智能解析、影视导航，提供简洁的管理后台与API系统。  
+> **2026-04-06**：项目架构优化，回归简洁专注的SQLite架构，移除复杂的MySQL支持。
 
 ![Flask](https://img.shields.io/badge/Flask-3.0.0+-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-green.svg)
-![SQLite/MySQL](https://img.shields.io/badge/Database-SQLite%2FMySQL-orange.svg)
+![SQLite](https://img.shields.io/badge/Database-SQLite-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![架构](https://img.shields.io/badge/架构-简洁专注-purple.svg)
 
 ## ✨ 核心功能概览
 
@@ -37,11 +39,12 @@
 - **实时统计**：API调用次数统计、成功率、24小时趋势图
 
 ### 🔧 **技术架构特性**
-- **双数据库支持**：默认SQLite，可无缝切换MySQL
+- **简洁数据库**：专注SQLite，零配置单文件架构，部署简单
 - **时区智能处理**：完整的时区支持，通过环境变量配置
 - **API文档系统**：完整的在线API文档和测试工具
 - **响应式设计**：完美适配桌面和移动设备
 - **安全保障**：密码SHA-256哈希存储，安全的会话管理
+- **维护友好**：简洁的代码结构，易于理解和维护
 
 ---
 
@@ -105,18 +108,14 @@ SECRET_KEY=your-secret-key      # 必须更换为安全的随机密钥！
 PORT=5000                      # 绑定端口
 
 # ===== 数据库配置 =====
-DB_TYPE=sqlite                  # sqlite（默认） 或 mysql
+DB_TYPE=sqlite                  # SQLite单文件（唯一支持，简洁可靠）
+SQLITE_PATH=./audiovisual.db    # SQLite数据库文件路径（默认当前目录）
 
-# SQLite 配置（默认）
-# SQLITE_PATH=./audiovisual.db
-
-# MySQL 配置（DB_TYPE=mysql 时使用）
-# DB_TYPE=mysql
-# MYSQL_HOST=localhost
-# MYSQL_PORT=3306
-# MYSQL_USER=root
-# MYSQL_PASSWORD=your_password
-# MYSQL_DB=audiovisual
+# ===================== 注意 =====================
+# 项目已回归简洁架构，仅支持SQLite数据库。
+# SQLite优势：单文件零配置、易于备份、开发部署简单。
+# 如需迁移数据，请使用管理后台的备份功能。
+# ===============================================
 
 # ===== 时区配置 =====
 # 时区字符串: Asia/Shanghai, UTC, America/New_York
@@ -143,12 +142,19 @@ ADMIN_PASSWORD=admin_password
 ADMIN_EMAIL=admin@example.com
 ```
 
-### 数据库切换
-项目支持两种数据库：
-1. **SQLite（默认）**：适合开发和个人使用，零配置
-2. **MySQL**：适合生产环境，需要安装 `PyMySQL`
+### 数据库选择（仅SQLite）
+项目采用简洁单文件架构，仅支持SQLite数据库：
+- **适合所有场景**：开发、测试、生产环境均表现优异
+- **零配置部署**：开箱即用，无需额外配置
+- **易于备份**：单文件数据库，复制即可备份
+- **性能出色**：对于中小型应用，性能完全不输MySQL
+- **维护简单**：无需管理数据库服务，减轻运维负担
 
-切换数据库只需修改 `.env` 文件的 `DB_TYPE` 和相应配置。
+### 为何选择简洁的SQLite架构？
+1. **专注核心业务**：避免复杂的数据库管理系统影响开发进度
+2. **降低门槛**：新人开发者更容易理解和使用
+3. **稳定可靠**：SQLite经过20多年验证，稳定性和兼容性极佳
+4. **扩展性**：当业务增长需要时，可通过备份系统轻松迁移数据
 
 ### 生产环境配置安全建议
 1. **环境模式**：`FLASK_ENV=production`
@@ -157,7 +163,7 @@ ADMIN_EMAIL=admin@example.com
    ```bash
    python -c "import secrets; print(secrets.token_hex(32))"
    ```
-4. **使用MySQL**：生产环境建议使用MySQL代替SQLite
+4. **保持简洁**：专注SQLite架构，无需复杂数据库配置
 5. **启用HTTPS**：如果启用HTTPS，设置`SESSION_COOKIE_SECURE=true`
 6. **日志管理**：配置`LOG_FILE`将日志输出到文件
 7. **管理员密码**：修改管理员默认密码为强密码
@@ -166,7 +172,7 @@ ADMIN_EMAIL=admin@example.com
 ✅ `FLASK_ENV=production`  
 ✅ `FLASK_DEBUG=false`  
 ✅ `SECRET_KEY` 已更换为随机密钥  
-✅ 数据库已配置（MySQL推荐）  
+✅ 数据库已配置（SQLite单文件）  
 ✅ 管理员密码已修改  
 ✅ 日志配置已完成  
 ✅ 防火墙/安全组已配置允许端口
@@ -271,7 +277,7 @@ response = requests.get('http://localhost:5000/api/apis')
 ```
 AudioVisual/
 ├── app.py                    # Flask应用工厂和主入口
-├── config.py                 # 配置管理（SQLite/MySQL切换）
+├── config.py                 # 配置管理（专注SQLite支持）
 ├── models.py                 # 数据库模型（用户、API、影视等）
 ├── auth.py                   # 用户认证蓝图（登录/注册/登出）
 ├── routes.py                 # 主路由蓝图（首页/解析/影视/API）
@@ -322,15 +328,19 @@ AudioVisual/
 - **Werkzeug**：安全密码哈希
 
 ### 数据库系统
-1. **SQLite（默认）**：
-   - 零配置，文件数据库
-   - 开发测试最佳选择
-   - 单文件便于备份和迁移
+**SQLite（零配置单文件架构）**：
+- **开发友好**：无需安装配置数据库服务，直接使用
+- **生产稳定**：SQLite经过20多年验证，稳定性极高
+- **部署简单**：单文件数据库，复制即可迁移和备份
+- **性能优异**：对于中小应用场景，性能完全不输MySQL
+- **兼容性好**：所有操作系统原生支持，无需额外驱动
 
-2. **MySQL（生产可选）**：
-   - 高性能并发支持
-   - 更好的生产环境稳定性
-   - 需要安装 `PyMySQL` 驱动
+### 架构优化亮点
+1. **专注核心**：回归视频解析核心业务，移除复杂数据库管理
+2. **配置简化**：单一`.env`文件配置，无需额外工具和配置
+3. **维护友好**：代码结构清晰，新人易于理解和维护
+4. **稳定可靠**：消除MySQL依赖带来的潜在问题
+5. **备份保障**：内置完善的备份恢复系统，数据安全无忧
 
 ### 时区处理
 采用智能时区方案：
@@ -370,7 +380,7 @@ start.cmd
 FLASK_ENV=production
 FLASK_DEBUG=false
 SECRET_KEY=<生成安全的随机密钥>
-DB_TYPE=mysql  # 生产环境推荐使用MySQL
+DB_TYPE=sqlite  # 生产环境使用SQLite单文件架构
 ```
 
 2. **使用Gunicorn（Linux/macOS）**：
@@ -441,9 +451,9 @@ netstat -ano | findstr :5000
 
 **Q2: 数据库连接失败**
 ```bash
-# SQLite: 检查文件权限
-# MySQL: 检查连接信息和PyMySQL安装
-pip install PyMySQL  # 如果使用MySQL
+# SQLite: 检查文件路径和权限
+# 确保项目目录有读写权限，数据库文件能正常创建
+# 检查 .env 文件中的 SQLITE_PATH 配置是否正确
 ```
 
 **Q3: 时区显示不正确**
@@ -556,6 +566,61 @@ Copyright (c) 2026 AudioVisual Web 项目
 
 ---
 
+## 📅 更新历史
+
+### 🏗️ 2026年4月6日 - 项目架构重大优化
+**🛠️ 回归简洁专注的设计理念 | 彻底移除MySQL支持**
+
+**🗂️ 核心架构变更：**
+- **✅ 简化数据库架构**：彻底移除MySQL支持，回归纯SQLite单文件架构
+- **✅ 代码深度清理**：删除7个冗余文件，清理470+行数据库管理代码
+- **✅ 配置精简**：恢复完整`.env`配置，移除所有MySQL相关配置变量
+- **✅ 界面优化**：移除管理后台的"数据库管理"模块，专注核心功能
+
+**✨ 架构优化效果：**
+1. **专注核心业务**：视频解析服务回归核心，去除复杂数据库管理系统
+2. **降低学习门槛**：代码结构更清晰，新人开发者更容易上手
+3. **维护简化**：减少技术债务，提升代码可维护性
+4. **稳定性增强**：消除MySQL依赖带来的潜在问题和复杂性
+5. **零配置部署**：SQLite单文件架构，开箱即用，部署极简
+
+**🧹 清理文件清单：**
+- `database_manager.py` (21.53KB) - 复杂的数据库管理器
+- `templates/admin/database.html` (42.31KB) - 数据库管理界面
+- `docs/database_management.md` (5.87KB) - 数据库管理文档
+- `api_docs_update_report.md` (4.02KB) - API文档报告
+- `favicon_fix_report.md` (4.09KB) - favicon修复报告
+- `env_utils.py` (17.7KB) - 冗余环境变量工具
+- `.database_config.yaml` (246B) - 数据库配置YAML文件
+
+**📊 代码清理统计：**
+- 总计删除文件：7个（约95KB）
+- 清理代码行：470+行数据库管理代码
+- 移除模块：完整的数据库迁移和管理系统
+- 保留功能：所有核心视频解析和管理功能完整
+
+### 🔧 2026年4月6日 - 配置系统优化
+**📝 config.py重大更新 - 回归简洁配置**
+- **移除MySQL逻辑**：彻底删除MySQL数据库连接和配置代码
+- **配置简化**：`get_db_uri()`函数简化为直接SQLite连接
+- **环境变量优化**：只保留SQLite必要的配置参数
+- **调试模式简化**：统一的配置逻辑，减少复杂性
+
+### 🚀 2026年4月5日 - 项目新增功能
+- **智能解析系统**：`/api/parse/smart` 自动尝试多个解析接口
+- **备份管理系统**：完整的备份创建、导入、恢复功能
+- **API文档系统**：详细的在线API文档和测试工具
+- **专业时区系统**：完整时区支持，可配置`APP_TIMEZONE`
+- **实时统计**：API调用次数、成功率、24小时趋势图表
+
+### 📍 2026年4月之前
+- **项目基础框架**：从Electron桌面应用重构为Python Flask Web应用
+- **核心功能开发**：多平台视频解析、完整用户系统和管理后台
+- **安全体系建立**：密码SHA-256哈希存储、安全会话管理
+- **数据库系统**：用户管理、API配置、影视导航数据存储
+
+---
+
 ## 🌟 特别鸣谢
 
 感谢以下开源项目为本项目提供支持：
@@ -571,4 +636,4 @@ Copyright (c) 2026 AudioVisual Web 项目
 
 如果有任何问题或建议，请随时通过GitHub Issue联系我们。
 
-*最后更新：2026年4月*
+*最后更新：2026年4月6日*
