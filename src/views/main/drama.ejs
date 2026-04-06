@@ -1,0 +1,161 @@
+<%- include('../partials/header', { title: '影视导航', currentPage: 'drama' }) %>
+
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .hero {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .hero h1 {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+    
+    .hero p {
+        color: #999;
+        font-size: 16px;
+    }
+    
+    .sites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+    
+    .site-card {
+        background-color: #252532;
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .site-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        border-color: #ff6768;
+    }
+    
+    .site-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .site-icon {
+        font-size: 48px;
+        line-height: 1;
+    }
+    
+    .site-info h3 {
+        color: #fff;
+        font-size: 18px;
+        margin-bottom: 4px;
+    }
+    
+    .site-info .site-url {
+        color: #666;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .site-description {
+        color: #999;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .site-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #3a3a4a;
+    }
+    
+    .site-tag {
+        background-color: rgba(255, 103, 104, 0.1);
+        color: #ff6768;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+    
+    .site-arrow {
+        color: #666;
+        font-size: 20px;
+        transition: all 0.2s;
+    }
+    
+    .site-card:hover .site-arrow {
+        color: #ff6768;
+        transform: translateX(4px);
+    }
+    
+    .tips-card {
+        background-color: rgba(255, 103, 104, 0.1);
+        border: 1px solid rgba(255, 103, 104, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 32px;
+    }
+    
+    .tips-card h3 {
+        color: #ff6768;
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    
+    .tips-card p {
+        color: #999;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+</style>
+
+<div class="main-container">
+    <div class="hero">
+        <h1>🎬 影视导航</h1>
+        <p>精选优质影视资源站，一站式访问各大影视平台</p>
+    </div>
+    
+    <div class="sites-grid">
+        <% sites.forEach(function(site) { %>
+        <a href="<%= site.url %>" target="_blank" class="site-card">
+            <div class="site-header">
+                <span class="site-icon"><%= site.icon %></span>
+                <div class="site-info">
+                    <h3><%= site.name %></h3>
+                    <span class="site-url"><%= site.url %></span>
+                </div>
+            </div>
+            <p class="site-description"><%= site.description || '暂无描述' %></p>
+            <div class="site-footer">
+                <span class="site-tag">影视导航</span>
+                <span class="site-arrow">→</span>
+            </div>
+        </a>
+        <% }); %>
+    </div>
+    
+    <div class="tips-card">
+        <h3>⚠️ 免责声明</h3>
+        <p>本平台仅提供影视导航服务，所有资源均来源于第三方网站。我们不对第三方网站的内容负责，也不参与任何视频的存储和上传。使用本服务时，请遵守当地法律法规，并尊重版权。</p>
+    </div>
+</div>
+
+</body>
+</html>

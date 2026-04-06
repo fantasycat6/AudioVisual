@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'AudioVisual Web' %></title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1e1e2f;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background-color: #16161e;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2a2a3a;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            text-decoration: none;
+        }
+        
+        .navbar-brand svg {
+            width: 28px;
+            height: 28px;
+            fill: #ff6768;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .navbar-item {
+            color: #999;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .navbar-item:hover, .navbar-item.active {
+            color: #fff;
+            background-color: #2a2a3a;
+        }
+        
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #999;
+        }
+        
+        .user-badge {
+            background-color: #ff6768;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: #ff6768;
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ff5252;
+        }
+        
+        .btn-secondary {
+            background-color: #2a2a3a;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #3a3a4a;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+        
+        /* Flash 消息 */
+        .flash-messages {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .flash-message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .flash-success {
+            background-color: #28a745;
+            color: #fff;
+        }
+        
+        .flash-error {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        
+        .flash-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* 容器 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 卡片 */
+        .card {
+            background-color: #252532;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3a3a4a;
+        }
+        
+        /* 表单 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background-color: #1e1e2f;
+            border: 1px solid #3a3a4a;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff6768;
+        }
+        
+        .form-input::placeholder {
+            color: #666;
+        }
+        
+        /* 表格 */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #3a3a4a;
+        }
+        
+        .table th {
+            color: #999;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        .table tr:hover {
+            background-color: #2a2a3a;
+        }
+        
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: #fff;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: #252532;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: #252532;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff6768;
+        }
+        
+        .stat-label {
+            color: #999;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background-color: #252532;
+            border-radius: 8px;
+            color: #fff;
+            z-index: 1001;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <% if (user) { %>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            AudioVisual
+        </a>
+        <div class="navbar-menu">
+            <a href="/" class="navbar-item <%= typeof currentPage !== 'undefined' && currentPage === 'home' ? 'active' : '' %>">视频解析</a>
+            <a href="/drama" class="navbar-item <%= typeof currentPage !== 'undefined' && currentPage === 'drama' ? 'active' : '' %>">影视导航</a>
+            <a href="/api-docs" class="navbar-item <%= typeof currentPage !== 'undefined' && currentPage === 'api-docs' ? 'active' : '' %>">API文档</a>
+            <% if (user.is_admin) { %>
+            <a href="/admin" class="navbar-item <%= typeof currentPage !== 'undefined' && currentPage === 'admin' ? 'active' : '' %>">管理后台</a>
+            <% } %>
+        </div>
+        <div class="navbar-user">
+            <div class="user-info">
+                <span><%= user.username %></span>
+                <% if (user.is_admin) { %>
+                <span class="user-badge">管理员</span>
+                <% } %>
+            </div>
+            <a href="/profile" class="btn btn-secondary btn-sm">个人中心</a>
+            <a href="/logout" class="btn btn-secondary btn-sm">退出</a>
+        </div>
+    </nav>
+    <% } %>
+    
+    <% if (flash && flash.success) { %>
+    <div class="flash-messages">
+        <div class="flash-message flash-success"><%= flash.success %></div>
+    </div>
+    <% } %>
+    
+    <% if (flash && flash.error) { %>
+    <div class="flash-messages">
+        <div class="flash-message flash-error"><%= flash.error %></div>
+    </div>
+    <% } %>

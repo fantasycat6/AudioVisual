@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频播放 - AudioVisual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #111;
+            color: #fff;
+        }
+        
+        .player-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .player-header {
+            background-color: #1e1e2f;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #3a3a4a;
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .player-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .player-logo svg {
+            width: 28px;
+            height: 28px;
+            fill: #ff6768;
+        }
+        
+        .player-api {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .player-api span {
+            color: #ff6768;
+        }
+        
+        .player-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary {
+            background-color: #3a3a4a;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4a4a5a;
+        }
+        
+        .btn-primary {
+            background-color: #ff6768;
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ff5252;
+        }
+        
+        .player-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .player-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background-color: #000;
+        }
+        
+        .player-toolbar {
+            background-color: #1e1e2f;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #3a3a4a;
+        }
+        
+        .video-url {
+            color: #999;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 60%;
+        }
+        
+        .video-url span {
+            color: #666;
+        }
+        
+        .api-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .api-selector label {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .api-select {
+            padding: 8px 16px;
+            background-color: #252532;
+            border: 1px solid #3a3a4a;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .error-overlay h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #ff6768;
+        }
+        
+        .error-overlay p {
+            color: #999;
+            margin-bottom: 24px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #3a3a4a;
+            border-top-color: #ff6768;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: #999;
+            margin-top: 16px;
+        }
+        
+        .btn-external-mode {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="loading-text">正在加载播放器...</p>
+    </div>
+    
+    <div class="player-container">
+        <header class="player-header">
+            <div class="player-info">
+                <a href="/" <% if (!isApiMode) { %>target="_top"<% } %> class="player-logo">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    AudioVisual
+                </a>
+                <span class="player-api">使用接口：<span><%= api.name %></span></span>
+            </div>
+            <div class="player-actions">
+                <button class="btn btn-secondary" onclick="refreshPlayer()">刷新</button>
+                <% if (isApiMode) { %>
+                <button class="btn btn-primary" onclick="window.close()">关闭</button>
+                <% } else { %>
+                <button class="btn btn-primary" onclick="goBackHome()">返回首页</button>
+                <% } %>
+            </div>
+        </header>
+        
+        <main class="player-main">
+            <iframe id="playerFrame" class="player-frame" src="<%= parse_url %>" allowfullscreen></iframe>
+        </main>
+        
+        <footer class="player-toolbar">
+            <div class="video-url">
+                <span>视频链接：</span><%= video_url %>
+            </div>
+            <div class="api-selector">
+                <label>切换接口：</label>
+                <select id="apiSelect" class="api-select" onchange="switchApi()">
+                    <% all_apis.forEach(function(a) { %>
+                    <option value="<%= a.url %>" <%= a.id === api.id ? 'selected' : '' %>><%= a.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        const playerFrame = document.getElementById('playerFrame');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const apiSelect = document.getElementById('apiSelect');
+        const videoUrl = '<%= video_url %>';
+        
+        // iframe 加载完成后隐藏 loading
+        playerFrame.addEventListener('load', () => {
+            loadingOverlay.style.display = 'none';
+        });
+        
+        // 3秒后自动隐藏 loading（以防 iframe 加载事件不触发）
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+        }, 3000);
+        
+        function refreshPlayer() {
+            loadingOverlay.style.display = 'flex';
+            const currentUrl = playerFrame.src;
+            playerFrame.src = '';
+            setTimeout(() => {
+                playerFrame.src = currentUrl;
+            }, 100);
+        }
+        
+        function switchApi() {
+            const newApiUrl = apiSelect.value;
+            const newParseUrl = newApiUrl + encodeURIComponent(videoUrl);
+            loadingOverlay.style.display = 'flex';
+            playerFrame.src = newParseUrl;
+        }
+
+        // 返回首页 - 根据是否在 iframe 中决定如何跳转
+        function goBackHome() {
+            if (window.top && window.top !== window) {
+                // 在 iframe 中，跳转到父窗口首页
+                window.top.location.href = '/';
+            } else {
+                // 独立页面，直接跳转
+                window.location.href = '/';
+            }
+        }
+    </script>
+</body>
+</html>

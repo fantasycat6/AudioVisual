@@ -1,0 +1,336 @@
+<%- include('../partials/header', { title: '视频解析', currentPage: 'home' }) %>
+
+<style>
+    .main-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .hero {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .hero h1 {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+    
+    .hero p {
+        color: #999;
+        font-size: 16px;
+    }
+    
+    .parse-card {
+        background-color: #252532;
+        border-radius: 16px;
+        padding: 32px;
+    }
+    
+    .parse-form {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    
+    .url-input {
+        flex: 1;
+        padding: 14px 18px;
+        background-color: #1e1e2f;
+        border: 2px solid #3a3a4a;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 15px;
+        transition: all 0.2s;
+    }
+    
+    .url-input:focus {
+        outline: none;
+        border-color: #ff6768;
+        box-shadow: 0 0 0 4px rgba(255, 103, 104, 0.1);
+    }
+    
+    .url-input::placeholder {
+        color: #555;
+    }
+    
+    .btn-parse {
+        padding: 14px 32px;
+        background: linear-gradient(135deg, #ff6768 0%, #ff5252 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    
+    .btn-parse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 103, 104, 0.3);
+    }
+    
+    .btn-parse:active {
+        transform: translateY(0);
+    }
+    
+    .api-selector {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    
+    .api-label {
+        color: #999;
+        font-size: 14px;
+    }
+    
+    .api-select {
+        padding: 8px 16px;
+        background-color: #1e1e2f;
+        border: 1px solid #3a3a4a;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 14px;
+        min-width: 180px;
+    }
+    
+    .result-area {
+        min-height: 200px;
+        background-color: #1e1e2f;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .result-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #555;
+    }
+    
+    .result-placeholder svg {
+        width: 64px;
+        height: 64px;
+        fill: #3a3a4a;
+        margin-bottom: 16px;
+    }
+    
+    .result-placeholder p {
+        font-size: 14px;
+    }
+    
+    .result-iframe {
+        width: 100%;
+        height: 600px;
+        border: none;
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(30, 30, 47, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+    
+    .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #3a3a4a;
+        border-top-color: #ff6768;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+        color: #999;
+        margin-top: 16px;
+        font-size: 14px;
+    }
+    
+    .error-display {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #ff6b7a;
+    }
+    
+    .error-display h3 {
+        font-size: 20px;
+        margin-bottom: 8px;
+    }
+    
+    .error-display p {
+        color: #999;
+        font-size: 14px;
+    }
+    
+    .quick-links {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #3a3a4a;
+    }
+    
+    .quick-links h3 {
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+    
+    .quick-links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+    
+    .quick-link-btn {
+        padding: 12px;
+        background-color: #1e1e2f;
+        border: 1px solid #3a3a4a;
+        border-radius: 8px;
+        color: #fff;
+        text-decoration: none;
+        text-align: center;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+    
+    .quick-link-btn:hover {
+        border-color: #ff6768;
+        background-color: rgba(255, 103, 104, 0.1);
+    }
+</style>
+
+<div class="main-container">
+    <div class="hero">
+        <h1>🎬 视频解析</h1>
+        <p>支持爱奇艺、腾讯视频、芒果TV、优酷等多个平台的视频解析</p>
+    </div>
+    
+    <div class="parse-card">
+        <div class="api-selector">
+            <span class="api-label">解析接口：</span>
+            <select id="apiSelect" class="api-select">
+                <option value="">智能选择（自动切换）</option>
+                <% apis.forEach(function(api) { %>
+                <option value="<%= api.id %>"><%= api.name %></option>
+                <% }); %>
+            </select>
+        </div>
+        
+        <form id="parseForm" class="parse-form">
+            <input type="text" id="videoUrl" class="url-input" placeholder="将视频链接粘贴于此，例如：https://v.qq.com/x/cover/xxx.html" required>
+            <button type="submit" class="btn-parse">解析播放</button>
+        </form>
+        
+        <div id="resultArea" class="result-area">
+            <div id="placeholder" class="result-placeholder">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                <p>输入视频链接，点击解析播放</p>
+            </div>
+            <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                <div class="spinner"></div>
+                <p class="loading-text">正在解析，请稍候...</p>
+            </div>
+            <div id="errorDisplay" class="error-display" style="display: none;">
+                <h3>解析失败</h3>
+                <p id="errorMessage"></p>
+            </div>
+            <iframe id="resultIframe" class="result-iframe" style="display: none;"></iframe>
+        </div>
+        
+        <div class="quick-links">
+            <h3>支持的平台</h3>
+            <div class="quick-links-grid">
+                <a href="https://v.qq.com/" target="_blank" class="quick-link-btn">腾讯视频</a>
+                <a href="https://www.iqiyi.com/" target="_blank" class="quick-link-btn">爱奇艺</a>
+                <a href="https://www.mgtv.com/" target="_blank" class="quick-link-btn">芒果TV</a>
+                <a href="https://v.youku.com/" target="_blank" class="quick-link-btn">优酷</a>
+                <a href="https://v.baidu.com/" target="_blank" class="quick-link-btn">百度视频</a>
+                <a href="https://www.bilibili.com/" target="_blank" class="quick-link-btn">哔哩哔哩</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('parseForm');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const apiSelect = document.getElementById('apiSelect');
+    const resultArea = document.getElementById('resultArea');
+    const placeholder = document.getElementById('placeholder');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const errorDisplay = document.getElementById('errorDisplay');
+    const errorMessage = document.getElementById('errorMessage');
+    const resultIframe = document.getElementById('resultIframe');
+    
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const videoUrl = videoUrlInput.value.trim();
+        if (!videoUrl) {
+            alert('请输入视频链接');
+            return;
+        }
+        
+        // 显示加载状态
+        placeholder.style.display = 'none';
+        errorDisplay.style.display = 'none';
+        resultIframe.style.display = 'none';
+        loadingOverlay.style.display = 'flex';
+        
+        const apiId = apiSelect.value;
+        let url = `/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}&type=json`;
+        if (apiId) {
+            url += `&api_id=${apiId}`;
+        }
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.success && data.parse_url) {
+                loadingOverlay.style.display = 'none';
+                resultIframe.style.display = 'block';
+                resultIframe.src = data.parse_url;
+            } else {
+                loadingOverlay.style.display = 'none';
+                errorDisplay.style.display = 'block';
+                errorMessage.textContent = data.message || '解析失败，请尝试更换接口或检查链接';
+            }
+        } catch (error) {
+            loadingOverlay.style.display = 'none';
+            errorDisplay.style.display = 'block';
+            errorMessage.textContent = '网络错误，请稍后重试';
+        }
+    });
+    
+    // 监听 iframe 加载完成
+    resultIframe.addEventListener('load', () => {
+        loadingOverlay.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>

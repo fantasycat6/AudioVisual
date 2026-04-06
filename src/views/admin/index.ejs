@@ -1,0 +1,355 @@
+<%- include('../partials/header', { title: '管理后台', currentPage: 'admin' }) %>
+
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .page-header {
+        margin-bottom: 32px;
+    }
+    
+    .page-header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    
+    .page-header p {
+        color: #999;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 24px;
+        transition: all 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .stat-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #ff6768;
+    }
+    
+    .stat-label {
+        color: #999;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+    
+    .card {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #3a3a4a;
+    }
+    
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-primary {
+        background-color: #ff6768;
+        color: #fff;
+    }
+    
+    .btn-primary:hover {
+        background-color: #ff5252;
+    }
+    
+    .btn-secondary {
+        background-color: #3a3a4a;
+        color: #fff;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4a4a5a;
+    }
+    
+    .chart-container {
+        height: 300px;
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        padding: 20px 0;
+    }
+    
+    .chart-bar {
+        flex: 1;
+        background: linear-gradient(to top, #ff6768 0%, #ff8787 100%);
+        border-radius: 4px 4px 0 0;
+        min-height: 2px;
+        transition: all 0.2s;
+        position: relative;
+    }
+    
+    .chart-bar:hover {
+        opacity: 0.8;
+    }
+    
+    .chart-labels {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 11px;
+        color: #666;
+    }
+    
+    .admin-menu {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    
+    .admin-menu-item {
+        background-color: #1e1e2f;
+        border: 1px solid #3a3a4a;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        color: #fff;
+        transition: all 0.2s;
+    }
+    
+    .admin-menu-item:hover {
+        border-color: #ff6768;
+        background-color: rgba(255, 103, 104, 0.1);
+    }
+    
+    .admin-menu-item .icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+    }
+    
+    .admin-menu-item .label {
+        font-size: 14px;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #3a3a4a;
+    }
+    
+    .table th {
+        color: #666;
+        font-weight: 500;
+        font-size: 13px;
+    }
+    
+    .table tr:hover {
+        background-color: #2a2a3a;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
+    .badge-success {
+        background-color: rgba(40, 167, 69, 0.2);
+        color: #5cdb7a;
+    }
+    
+    .badge-admin {
+        background-color: rgba(255, 103, 104, 0.2);
+        color: #ff6768;
+    }
+</style>
+
+<div class="main-container">
+    <div class="page-header">
+        <h1>🎛️ 管理后台</h1>
+        <p>欢迎回来，<%= user.username %>！这里是系统管理控制台。</p>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value"><%= userCount %></div>
+            <div class="stat-label">用户总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔗</div>
+            <div class="stat-value"><%= apiCount %></div>
+            <div class="stat-label">解析接口</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎬</div>
+            <div class="stat-value"><%= siteCount %></div>
+            <div class="stat-label">影视导航</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value"><%= total_api_calls %></div>
+            <div class="stat-label">API调用总数</div>
+        </div>
+    </div>
+    
+    <div class="admin-menu">
+        <a href="/admin/users" class="admin-menu-item">
+            <div class="icon">👥</div>
+            <div class="label">用户管理</div>
+        </a>
+        <a href="/admin/apis" class="admin-menu-item">
+            <div class="icon">🔗</div>
+            <div class="label">解析接口管理</div>
+        </a>
+        <a href="/admin/drama-sites" class="admin-menu-item">
+            <div class="icon">🎬</div>
+            <div class="label">影视导航管理</div>
+        </a>
+        <a href="/admin/backup" class="admin-menu-item">
+            <div class="icon">💾</div>
+            <div class="label">数据备份</div>
+        </a>
+        <a href="/admin/call-logs" class="admin-menu-item">
+            <div class="icon">📋</div>
+            <div class="label">调用记录</div>
+        </a>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">📈 24小时调用趋势</h3>
+                <span style="color: #999; font-size: 13px;">成功率: <%= success_rate %>%</span>
+            </div>
+            <div class="chart-container" id="chartContainer"></div>
+            <div class="chart-labels" id="chartLabels"></div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🏆 热门解析接口</h3>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>接口名称</th>
+                        <th>调用次数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (api_stats && api_stats.length > 0) { %>
+                    <% api_stats.forEach(function(stat) { %>
+                    <tr>
+                        <td><%= stat.api_name %></td>
+                        <td><%= stat.count %> 次</td>
+                    </tr>
+                    <% }); %>
+                    <% } else { %>
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: #666;">暂无数据</td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 渲染图表
+    (function initChart() {
+        const countsContainer = document.getElementById('chartContainer');
+        const labelsContainer = document.getElementById('chartLabels');
+        
+        // 从页面脚本标签获取数据
+        const countsRaw = '<%- last_24h_counts_json %>';
+        const hoursRaw = '<%- last_24h_hours_json %>';
+        
+        let counts = [];
+        let hours = [];
+        
+        try {
+            counts = JSON.parse(countsRaw);
+            hours = JSON.parse(hoursRaw);
+        } catch (e) {
+            console.error('图表数据解析失败:', e);
+            counts = [];
+            hours = [];
+        }
+        
+        // 清空现有内容
+        countsContainer.innerHTML = '';
+        labelsContainer.innerHTML = '';
+        
+        if (!counts.length || !hours.length) {
+            countsContainer.innerHTML = '<div style="text-align:center;color:#666;padding:40px;">暂无数据</div>';
+            return;
+        }
+        
+        const maxCount = Math.max(...counts, 1);
+        
+        counts.forEach((count, i) => {
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = `${(count / maxCount) * 100}%`;
+            bar.title = `${hours[i]}: ${count} 次`;
+            countsContainer.appendChild(bar);
+        });
+        
+        // 只显示部分标签
+        const labelStep = Math.ceil(hours.length / 6);
+        hours.forEach((hour, i) => {
+            if (i % labelStep === 0 || i === hours.length - 1) {
+                const label = document.createElement('span');
+                label.textContent = hour;
+                labelsContainer.appendChild(label);
+            }
+        });
+    })();
+</script>
+
+</body>
+</html>

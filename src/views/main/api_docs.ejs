@@ -1,0 +1,305 @@
+<%- include('../partials/header', { title: 'API 文档', currentPage: 'api-docs' }) %>
+
+<style>
+    .main-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .hero {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .hero h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    
+    .hero p {
+        color: #999;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #ff6768;
+    }
+    
+    .stat-label {
+        color: #999;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+    
+    .card {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+    
+    .code-block {
+        background-color: #1e1e2f;
+        border-radius: 8px;
+        padding: 16px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+        overflow-x: auto;
+        margin: 12px 0;
+        color: #e0e0e0;
+    }
+    
+    .code-block .keyword { color: #c678dd; }
+    .code-block .string { color: #98c379; }
+    .code-block .comment { color: #5c6370; }
+    .code-block .method { color: #61afef; }
+    
+    .endpoint {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 16px 0;
+    }
+    
+    .method-badge {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        min-width: 60px;
+        text-align: center;
+    }
+    
+    .method-get { background-color: #28a745; color: #fff; }
+    .method-post { background-color: #007bff; color: #fff; }
+    
+    .endpoint-path {
+        font-family: monospace;
+        color: #e0e0e0;
+        font-size: 14px;
+    }
+    
+    .param-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+    }
+    
+    .param-table th, .param-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #3a3a4a;
+    }
+    
+    .param-table th {
+        color: #999;
+        font-weight: 500;
+        font-size: 13px;
+    }
+    
+    .param-name {
+        font-family: monospace;
+        color: #ff6768;
+    }
+    
+    .param-required {
+        color: #ffc107;
+        font-size: 11px;
+        margin-left: 8px;
+    }
+    
+    .auth-method {
+        margin: 20px 0;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed #3a3a4a;
+    }
+    
+    .auth-method:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
+    .auth-method h4 {
+        color: #61afef;
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
+</style>
+
+<div class="main-container">
+    <div class="hero">
+        <h1>📡 API 文档</h1>
+        <p>使用 API Key 无需登录即可调用视频解析接口</p>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value"><%= total_api_calls %></div>
+            <div class="stat-label">总调用次数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value"><%= today_active_users %></div>
+            <div class="stat-label">今日活跃用户</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value"><%= success_rate %>%</div>
+            <div class="stat-label">成功率</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value"><%= avg_response_time %>ms</div>
+            <div class="stat-label">平均响应时间</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 class="card-title">认证方式</h2>
+        <p style="color: #999; margin-bottom: 12px;">
+            API 支持三种认证方式，请任选其一：
+        </p>
+        
+        <div class="auth-method">
+            <h4>方式1：通过查询参数</h4>
+            <div class="code-block">
+GET /api/parse/smart?api_key=<span class="string">your_api_key</span>&video_url=<span class="string">https://...</span>
+            </div>
+        </div>
+        
+        <div class="auth-method">
+            <h4>方式2：通过请求头 X-API-Key</h4>
+            <div class="code-block">
+GET /api/parse/smart?video_url=<span class="string">https://...</span>
+Headers: X-API-Key: <span class="string">your_api_key</span>
+            </div>
+        </div>
+        
+        <div class="auth-method">
+            <h4>方式3：通过 Bearer Token</h4>
+            <div class="code-block">
+GET /api/parse/smart?video_url=<span class="string">https://...</span>
+Headers: Authorization: Bearer <span class="string">your_api_key</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 class="card-title">智能解析接口</h2>
+        
+        <div class="endpoint">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/parse/smart</span>
+        </div>
+        
+        <p style="color: #999; margin-bottom: 12px;">自动尝试多个解析接口，直到成功或全部失败。</p>
+        
+        <table class="param-table">
+            <thead>
+                <tr>
+                    <th>参数</th>
+                    <th>类型</th>
+                    <th>说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="param-name">video_url</span><span class="param-required">必填</span></td>
+                    <td>string</td>
+                    <td>要解析的视频链接</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">api_id</span></td>
+                    <td>int</td>
+                    <td>指定从哪个接口开始尝试</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">max_retries</span></td>
+                    <td>int</td>
+                    <td>最大尝试次数，默认3</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">type</span></td>
+                    <td>string</td>
+                    <td>返回类型：json(默认) 或 video</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h4 style="margin: 20px 0 12px;">请求示例</h4>
+        <div class="code-block">
+<span class="comment"># 获取 JSON 响应</span>
+curl "<span class="string">https://your-domain/api/parse/smart?api_key=your_key&video_url=https://v.qq.com/...</span>"
+
+<span class="comment"># 直接获取视频播放页 HTML</span>
+curl "<span class="string">https://your-domain/api/parse/smart?api_key=your_key&video_url=https://v.qq.com/...&type=video</span>"
+        </div>
+        
+        <h4 style="margin: 20px 0 12px;">响应示例</h4>
+        <div class="code-block">
+{
+  <span class="string">"success"</span>: <span class="keyword">true</span>,
+  <span class="string">"message"</span>: <span class="string">"使用 虾米视频解析 解析成功"</span>,
+  <span class="string">"parse_url"</span>: <span class="string">"https://jx.xmflv.com/?url=https%3A%2F%2Fv.qq.com%2F..."</span>,
+  <span class="string">"api_id"</span>: <span class="keyword">1</span>,
+  <span class="string">"api_name"</span>: <span class="string">"虾米视频解析"</span>,
+  <span class="string">"next_api_id"</span>: <span class="keyword">2</span>
+}
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2 class="card-title">快速解析接口</h2>
+        
+        <div class="endpoint">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/parse/quick</span>
+        </div>
+        
+        <p style="color: #999;">获取所有可用解析接口列表，返回 JSON 格式。</p>
+    </div>
+    
+    <div class="card">
+        <h2 class="card-title">获取解析接口列表</h2>
+        
+        <div class="endpoint">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/apis</span>
+        </div>
+        
+        <p style="color: #999;">获取所有启用的解析接口。</p>
+    </div>
+    
+    <div class="card">
+        <h2 class="card-title">获取影视导航列表</h2>
+        
+        <div class="endpoint">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/drama-sites</span>
+        </div>
+        
+        <p style="color: #999;">获取所有启用的影视导航站点。</p>
+    </div>
+</div>
+
+</body>
+</html>

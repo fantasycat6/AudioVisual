@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - AudioVisual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f 0%, #16161e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo svg {
+            width: 64px;
+            height: 64px;
+            fill: #ff6768;
+        }
+        
+        .logo h1 {
+            color: #fff;
+            font-size: 28px;
+            margin-top: 16px;
+        }
+        
+        .logo p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        .login-card {
+            background-color: #252532;
+            border-radius: 16px;
+            padding: 32px;
+        }
+        
+        .form-title {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #1e1e2f;
+            border: 1px solid #3a3a4a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff6768;
+            box-shadow: 0 0 0 3px rgba(255, 103, 104, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #555;
+        }
+        
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .remember-me input {
+            width: 16px;
+            height: 16px;
+            accent-color: #ff6768;
+        }
+        
+        .forgot-link {
+            color: #ff6768;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff6768;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-login:hover {
+            background-color: #ff5252;
+            transform: translateY(-1px);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: #3a3a4a;
+        }
+        
+        .divider span {
+            padding: 0 16px;
+        }
+        
+        .register-link {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .register-link a {
+            color: #ff6768;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background-color: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #ff6b7a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            background-color: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: #5cdb7a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            <h1>AudioVisual</h1>
+            <p>视频解析平台</p>
+        </div>
+        
+        <div class="login-card">
+            <h2 class="form-title">用户登录</h2>
+            
+            <% if (error) { %>
+            <div class="error-message"><%= error %></div>
+            <% } %>
+            
+            <% if (success) { %>
+            <div class="success-message"><%= success %></div>
+            <% } %>
+            
+            <form id="loginForm" method="POST" action="/login">
+                <input type="hidden" name="next" value="<%= next %>">
+                
+                <div class="form-group">
+                    <label class="form-label">用户名 / 邮箱</label>
+                    <input type="text" name="username" class="form-input" placeholder="请输入用户名或邮箱" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" name="password" class="form-input" placeholder="请输入密码" required>
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember" value="1">
+                        <span>记住我</span>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-login">登 录</button>
+            </form>
+            
+            <div class="divider"><span>或</span></div>
+            
+            <div class="register-link">
+                还没有账号？<a href="/register">立即注册</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('loginForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = result.redirect || '/';
+                } else {
+                    alert(result.message || '登录失败');
+                }
+            } catch (error) {
+                // 如果是普通表单提交（没有 fetch），则让表单正常提交
+                form.submit();
+            }
+        });
+    </script>
+</body>
+</html>

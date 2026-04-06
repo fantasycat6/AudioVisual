@@ -1,0 +1,577 @@
+<%- include('../partials/header', { title: '数据备份', currentPage: 'admin' }) %>
+
+<style>
+    .main-container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .page-header {
+        margin-bottom: 32px;
+    }
+    
+    .page-header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    
+    .page-header p {
+        color: #999;
+    }
+    
+    .card {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #3a3a4a;
+    }
+    
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-primary {
+        background-color: #ff6768;
+        color: #fff;
+    }
+    
+    .btn-primary:hover {
+        background-color: #ff5252;
+    }
+    
+    .btn-secondary {
+        background-color: #3a3a4a;
+        color: #fff;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4a4a5a;
+    }
+    
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    
+    .btn-success {
+        background-color: #28a745;
+        color: #fff;
+    }
+    
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #3a3a4a;
+    }
+    
+    .table th {
+        color: #666;
+        font-weight: 500;
+        font-size: 13px;
+    }
+    
+    .table tr:hover {
+        background-color: #2a2a3a;
+    }
+    
+    .file-size {
+        color: #999;
+        font-size: 13px;
+    }
+    
+    .backup-desc {
+        color: #666;
+        font-size: 13px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .empty-state .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .import-area {
+        border: 2px dashed #3a3a4a;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        margin-top: 20px;
+        transition: all 0.2s;
+    }
+    
+    .import-area:hover {
+        border-color: #ff6768;
+    }
+    
+    .import-area.dragover {
+        border-color: #ff6768;
+        background-color: rgba(255, 103, 104, 0.1);
+    }
+    
+    .import-options {
+        display: flex;
+        gap: 16px;
+        margin: 20px 0;
+        justify-content: center;
+    }
+    
+    .import-option {
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid #3a3a4a;
+        transition: all 0.2s;
+    }
+    
+    .import-option:hover {
+        border-color: #ff6768;
+    }
+    
+    .import-option.selected {
+        border-color: #ff6768;
+        background-color: rgba(255, 103, 104, 0.1);
+    }
+</style>
+
+<div class="main-container">
+    <div class="page-header">
+        <h1>💾 数据备份与恢复</h1>
+        <p>管理系统的配置备份文件，包括导出、导入和恢复功能。</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📋 备份列表</h3>
+            <button class="btn btn-primary" onclick="createBackup()">
+                ✨ 创建备份
+            </button>
+        </div>
+        
+        <table class="table" id="backupTable">
+            <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>类型</th>
+                    <th>大小</th>
+                    <th>创建时间</th>
+                    <th>说明</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="backupList">
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>暂无备份文件</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📤 导入备份</h3>
+        </div>
+        
+        <p style="color: #999; margin-bottom: 16px;">
+            上传 JSON 格式的备份文件，选择导入模式（合并模式会保留现有数据，覆盖模式会先清空再导入）。
+        </p>
+
+        <!-- 导入模式选择 -->
+        <div style="margin-bottom: 16px;">
+            <p style="margin-bottom: 8px; font-weight: 500;">导入模式：</p>
+            <div style="display: flex; gap: 16px;">
+                <label style="cursor: pointer;">
+                    <input type="radio" name="importMode" value="merge" checked style="margin-right: 6px;">
+                    <span style="color: #ccc;">合并模式</span>
+                    <span style="color: #999; font-size: 13px; display: block;">（添加新数据，跳过重复 URL）</span>
+                </label>
+                <label style="cursor: pointer;">
+                    <input type="radio" name="importMode" value="overwrite" style="margin-right: 6px;">
+                    <span style="color: #ccc;">覆盖模式</span>
+                    <span style="color: #999; font-size: 13px; display: block;">（清空现有数据，完全导入）</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="import-area" id="importArea">
+            <div class="icon" style="font-size: 48px; margin-bottom: 16px;">📁</div>
+            <p style="color: #999;">拖拽备份文件到此处，或点击选择文件</p>
+            <input type="file" id="backupFile" accept=".json" style="display: none;">
+            <button class="btn btn-secondary" onclick="document.getElementById('backupFile').click()" style="margin-top: 16px;">
+                选择文件
+            </button>
+        </div>
+
+        <div id="selectedFile" style="display: none; margin-top: 16px; padding: 16px; background: #1e1e2f; border-radius: 8px;">
+            <p style="margin: 0 0 12px 0;">已选择: <span id="fileName"></span></p>
+            <div style="margin-bottom: 12px; color: #999; font-size: 14px;">
+                当前模式：<span id="importModeLabel">合并模式</span>
+            </div>
+
+            <button class="btn btn-success" onclick="importBackup()">
+                开始导入
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedFile = null;
+    let currentImportMode = 'merge';
+    
+    // 更新导入模式标签和变量
+    document.querySelectorAll('input[name="importMode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentImportMode = e.target.value;
+            const modeText = currentImportMode === 'merge' ? '合并模式' : '覆盖模式';
+            
+            if (document.getElementById('importModeLabel')) {
+                document.getElementById('importModeLabel').textContent = modeText;
+            }
+            
+            // 更新模式提示文本
+            const modeHint = currentImportMode === 'merge' 
+                ? '合并模式：添加新数据，跳过重复 URL'
+                : '覆盖模式：会清空现有数据！请谨慎使用';
+            console.log('当前导入模式：' + modeText + ' - ' + modeHint);
+        });
+    });
+    
+    // 加载备份列表
+    function loadBackups() {
+        fetch('/admin/backup/list')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('backupList');
+                if (data.success && data.backups && data.backups.length > 0) {
+                    tbody.innerHTML = data.backups.map(backup => `
+                        <tr>
+                            <td><code style="font-size: 12px;">${backup.filename}</code></td>
+                            <td>${backup.backup_type === 'manual' ? '手动' : backup.backup_type}</td>
+                            <td class="file-size">${backup.file_size_formatted}</td>
+                            <td>${backup.created_at_formatted}</td>
+                            <td class="backup-desc">${backup.description || '-'}</td>
+                            <td class="actions">
+                                <button class="btn btn-sm btn-secondary" onclick="downloadBackup(${backup.id})">
+                                    ⬇️ 下载
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="showRestoreModal(${backup.id})">
+                                    🔄 恢复
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBackup(${backup.id})">
+                                    🗑️ 删除
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div class="icon">📭</div>
+                                <p>暂无备份文件</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error('加载备份列表失败:', err);
+                const tbody = document.getElementById('backupList');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>暂无备份文件</p>
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // 创建备份
+    function createBackup() {
+        fetch('/admin/backup/create')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('备份创建成功！');
+                    loadBackups();
+                } else {
+                    alert('备份创建失败: ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('备份创建失败: ' + err);
+            });
+    }
+    
+    // 下载备份
+    function downloadBackup(id) {
+        window.location.href = '/admin/backup/download/' + id;
+    }
+    
+    // 显示恢复确认（仅合并模式）
+    function showRestoreModal(id) {
+        // 询问恢复模式
+        const backdrop = document.createElement('div');
+        backdrop.id = 'restoreBackdrop';
+        backdrop.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            font-family: inherit;
+        `;
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: #252532;
+            border-radius: 12px;
+            padding: 24px;
+            width: 400px;
+            max-width: 90%;
+            color: #fff;
+        `;
+        
+        modal.innerHTML = `
+            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 18px;">🔁 选择恢复模式</h3>
+            <p style="color: #999; margin-bottom: 16px;">请选择恢复模式：</p>
+            
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; margin-bottom: 12px; cursor: pointer;">
+                    <input type="radio" name="restoreMode" value="merge" checked style="margin-right: 8px;">
+                    <span style="font-weight: 500;">合并模式</span>
+                    <span style="color: #999; display: block; margin-top: 4px; font-size: 14px;">添加备份中的数据，跳过重复 URL 的接口/导航</span>
+                </label>
+                <label style="display: block; cursor: pointer;">
+                    <input type="radio" name="restoreMode" value="overwrite" style="margin-right: 8px;">
+                    <span style="font-weight: 500; color: #ff6b6b;">覆盖模式</span>
+                    <span style="color: #999; display: block; margin-top: 4px; font-size: 14px;">先清空现有数据，再完全导入备份中的数据</span>
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="cancelBtn" style="padding: 8px 16px; border: 1px solid #444; background: transparent; color: #ddd; border-radius: 6px; cursor: pointer;">
+                    取消
+                </button>
+                <button id="confirmBtn" style="padding: 8px 16px; background: #28a745; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                    开始恢复
+                </button>
+            </div>
+        `;
+        
+        backdrop.appendChild(modal);
+        document.body.appendChild(backdrop);
+        
+        // 移除事件监听器
+        document.getElementById('cancelBtn').onclick = () => backdrop.remove();
+        document.getElementById('confirmBtn').onclick = () => {
+            const mode = document.querySelector('input[name="restoreMode"]:checked').value;
+            backdrop.remove();
+            
+            if (mode === 'overwrite') {
+                const isConfirmed = confirm(`⚠️ 警告：您选择了覆盖模式\n\n此操作会清空以下现有数据：\n1. 所有解析接口（${window.parseApiCount || '未知'} 条）\n2. 所有影视导航（${window.dramaSiteCount || '未知'} 条）\n\n确认要继续吗？`);
+                if (!isConfirmed) return;
+            }
+            
+            restoreBackup(id, mode);
+        };
+    }
+
+    // 恢复备份（支持合并模式和覆盖模式）
+    function restoreBackup(id, mode = 'merge') {
+        fetch('/admin/backup/restore/' + id, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('恢复成功！' + data.message);
+            } else {
+                alert('恢复失败: ' + data.message);
+            }
+        })
+        .catch(err => {
+            alert('恢复失败: ' + err);
+        });
+    }
+    
+    // 删除备份
+    function deleteBackup(id) {
+        if (!confirm('确定要删除这个备份吗？此操作不可撤销。')) {
+            return;
+        }
+        
+        fetch('/admin/backup/' + id, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('备份已删除');
+                    loadBackups();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('删除失败: ' + err);
+            });
+    }
+    
+    // 文件选择
+    document.getElementById('backupFile').addEventListener('change', function(e) {
+        if (this.files.length > 0) {
+            selectedFile = this.files[0];
+            document.getElementById('fileName').textContent = selectedFile.name;
+            document.getElementById('selectedFile').style.display = 'block';
+        }
+    });
+    
+    // 拖拽上传
+    const importArea = document.getElementById('importArea');
+    
+    importArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    
+    importArea.addEventListener('dragleave', function() {
+        this.classList.remove('dragover');
+    });
+    
+    importArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.name.endsWith('.json')) {
+                selectedFile = file;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('selectedFile').style.display = 'block';
+            } else {
+                alert('请选择 JSON 格式的备份文件');
+            }
+        }
+    });
+    
+    // 导入备份
+    function importBackup() {
+        if (!selectedFile) {
+            alert('请先选择备份文件');
+            return;
+        }
+        
+        if (currentImportMode === 'overwrite') {
+            const isConfirmed = confirm(`⚠️ 警告：您选择了覆盖模式\n\n此操作会清空以下现有数据：\n1. 所有解析接口（${window.parseApiCount || '未知'} 条）\n2. 所有影视导航（${window.dramaSiteCount || '未知'} 条）\n\n确认要继续吗？`);
+            if (!isConfirmed) return;
+        }
+        
+        const formData = new FormData();
+        formData.append('backup_file', selectedFile);
+        formData.append('mode', currentImportMode);
+        
+        fetch('/admin/backup/import', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('导入成功！' + data.message);
+                selectedFile = null;
+                document.getElementById('selectedFile').style.display = 'none';
+                document.getElementById('backupFile').value = '';
+                currentImportMode = 'merge'; // 重置为默认模式
+                document.querySelector('input[name="importMode"][value="merge"]').checked = true;
+            } else {
+                alert('导入失败: ' + data.message);
+            }
+        })
+        .catch(err => {
+            alert('导入失败: ' + err);
+        });
+    }
+    
+    // 加载数据统计
+    function loadDataStats() {
+        fetch('/admin/api/data-stats')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.parseApiCount = data.parse_api_count || 0;
+                    window.dramaSiteCount = data.drama_site_count || 0;
+                }
+            })
+            .catch(err => console.error('加载数据统计失败:', err));
+    }
+    
+    // 页面加载时获取备份列表和统计数据
+    loadBackups();
+    loadDataStats();
+</script>
+
+</body>
+</html>

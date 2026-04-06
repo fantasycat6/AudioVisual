@@ -1,0 +1,541 @@
+<%- include('../partials/header', { title: '解析接口管理', currentPage: 'admin' }) %>
+
+<style>
+    .main-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .page-header {
+        margin-bottom: 32px;
+    }
+    
+    .page-header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    
+    .page-header a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .page-header a:hover {
+        color: #ff6768;
+    }
+    
+    .card {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #3a3a4a;
+    }
+    
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background-color: #ff6768;
+        color: #fff;
+    }
+    
+    .btn-primary:hover {
+        background-color: #ff5252;
+    }
+    
+    .btn-secondary {
+        background-color: #3a3a4a;
+        color: #fff;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4a4a5a;
+    }
+    
+    .btn-sm {
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+    
+    .api-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .api-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background-color: #1e1e2f;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    
+    .api-item:hover {
+        background-color: #2a2a3a;
+    }
+    
+    .api-item.disabled {
+        opacity: 0.5;
+    }
+    
+    .api-drag-handle {
+        color: #666;
+        cursor: grab;
+        font-size: 18px;
+        user-select: none;
+        touch-action: none;
+    }
+    
+    .api-drag-handle:active {
+        cursor: grabbing;
+    }
+    
+    .api-item.dragging {
+        opacity: 0.5;
+        background-color: #2a2a3a;
+    }
+    
+    .api-item.drag-over {
+        border-top: 2px solid #ff6768;
+    }
+    
+    .api-item.drag-over-bottom {
+        border-bottom: 2px solid #ff6768;
+    }
+    
+    .drag-hint {
+        color: #666;
+        font-size: 12px;
+        margin-left: 8px;
+    }
+    
+    .api-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .api-name {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    
+    .api-url {
+        color: #666;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .api-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        background-color: #3a3a4a;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .toggle-switch.active {
+        background-color: #ff6768;
+    }
+    
+    .toggle-switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background-color: #fff;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    
+    .toggle-switch.active::after {
+        left: 22px;
+    }
+    
+    .api-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background-color: #252532;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        color: #999;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-label {
+        display: block;
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        background-color: #1e1e2f;
+        border: 1px solid #3a3a4a;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 14px;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #ff6768;
+    }
+    
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+</style>
+
+<div class="main-container">
+    <div class="page-header">
+        <a href="/admin">← 返回管理后台</a>
+        <h1 style="margin-top: 12px;">解析接口管理</h1>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">解析接口列表 (<%= apis.length %> 个)</h3>
+            <button class="btn btn-primary" onclick="showAddModal()">+ 添加接口</button>
+        </div>
+        
+        <p style="color: #666; font-size: 13px; margin-bottom: 16px;">
+            💡 提示：长按或拖动左侧图标可对接口进行排序
+        </p>
+        <div id="apiList" class="api-list">
+            <% if (apis.length > 0) { %>
+            <% apis.forEach(function(api) { %>
+            <div class="api-item <%= api.is_enabled ? '' : 'disabled' %>" data-id="<%= api.id %>" draggable="true">
+                <div class="api-drag-handle" title="拖动排序">⋮⋮</div>
+                <div class="api-info">
+                    <div class="api-name"><%= api.name %></div>
+                    <div class="api-url"><%= api.url %></div>
+                </div>
+                <div class="api-status">
+                    <span style="font-size: 12px; color: #666;"><%= api.is_enabled ? '已启用' : '已禁用' %></span>
+                    <div class="toggle-switch <%= api.is_enabled ? 'active' : '' %>" onclick="toggleApi(<%= api.id %>)"></div>
+                </div>
+                <div class="api-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="showEditModal(<%= api.id %>, '<%= api.name %>', '<%= api.url %>')">编辑</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteApi(<%= api.id %>)">删除</button>
+                </div>
+            </div>
+            <% }); %>
+            <% } else { %>
+            <div class="empty-state">
+                <p>暂无解析接口，请点击上方按钮添加</p>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑接口模态框 -->
+<div id="apiModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">添加接口</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="apiForm">
+            <input type="hidden" id="apiId">
+            <div class="form-group">
+                <label class="form-label">接口名称</label>
+                <input type="text" id="apiName" class="form-input" required placeholder="例如：虾米视频解析">
+            </div>
+            <div class="form-group">
+                <label class="form-label">接口URL</label>
+                <input type="text" id="apiUrl" class="form-input" required placeholder="例如：https://jx.xmflv.com/?url=">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 拖拽排序
+    let draggedItem = null;
+    
+    document.querySelectorAll('.api-item').forEach(item => {
+        // 拖动开始
+        item.addEventListener('dragstart', (e) => {
+            draggedItem = item;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', item.innerHTML);
+        });
+        
+        // 拖动结束
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
+            document.querySelectorAll('.api-item').forEach(el => {
+                el.classList.remove('drag-over', 'drag-over-bottom');
+            });
+            draggedItem = null;
+        });
+        
+        // 拖动经过
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (item === draggedItem) return;
+            
+            const rect = item.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            
+            document.querySelectorAll('.api-item').forEach(el => {
+                el.classList.remove('drag-over', 'drag-over-bottom');
+            });
+            
+            if (e.clientY < midY) {
+                item.classList.add('drag-over');
+            } else {
+                item.classList.add('drag-over-bottom');
+            }
+        });
+        
+        // 放置
+        item.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            
+            if (item === draggedItem) return;
+            
+            const rect = item.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            const insertBefore = e.clientY < midY;
+            
+            // 获取排序后的 ID 列表
+            const apiList = document.getElementById('apiList');
+            const items = [...apiList.querySelectorAll('.api-item')];
+            
+            if (insertBefore) {
+                apiList.insertBefore(draggedItem, item);
+            } else {
+                apiList.insertBefore(draggedItem, item.nextSibling);
+            }
+            
+            // 清除拖动样式
+            document.querySelectorAll('.api-item').forEach(el => {
+                el.classList.remove('drag-over', 'drag-over-bottom');
+            });
+            
+            // 保存新的排序
+            const newOrder = [...apiList.querySelectorAll('.api-item')].map(el => el.dataset.id);
+            await saveOrder(newOrder);
+        });
+        
+        // 拖动进入
+        item.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+        });
+    });
+    
+    // 保存排序
+    async function saveOrder(newOrder) {
+        try {
+            const response = await fetch('/admin/apis/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order: newOrder })
+            });
+            
+            const result = await response.json();
+            if (!result.success) {
+                alert(result.message || '保存排序失败');
+            }
+        } catch (error) {
+            alert('保存排序失败');
+        }
+    }
+    
+    function showAddModal() {
+        document.getElementById('modalTitle').textContent = '添加接口';
+        document.getElementById('apiId').value = '';
+        document.getElementById('apiName').value = '';
+        document.getElementById('apiUrl').value = '';
+        document.getElementById('apiModal').classList.add('active');
+    }
+    
+    function showEditModal(id, name, url) {
+        document.getElementById('modalTitle').textContent = '编辑接口';
+        document.getElementById('apiId').value = id;
+        document.getElementById('apiName').value = name;
+        document.getElementById('apiUrl').value = url;
+        document.getElementById('apiModal').classList.add('active');
+    }
+    
+    function closeModal() {
+        document.getElementById('apiModal').classList.remove('active');
+    }
+    
+    document.getElementById('apiForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('apiId').value;
+        const name = document.getElementById('apiName').value.trim();
+        const url = document.getElementById('apiUrl').value.trim();
+        
+        try {
+            let response;
+            if (id) {
+                response = await fetch(`/admin/apis/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, url })
+                });
+            } else {
+                response = await fetch('/admin/apis/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, url })
+                });
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '操作失败');
+            }
+        } catch (error) {
+            alert('请求失败');
+        }
+    });
+    
+    async function toggleApi(id) {
+        try {
+            const response = await fetch(`/admin/apis/${id}/toggle`, { method: 'POST' });
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            }
+        } catch (error) {
+            alert('请求失败');
+        }
+    }
+    
+    async function deleteApi(id) {
+        if (!confirm('确定要删除这个接口吗？')) return;
+        
+        try {
+            const response = await fetch(`/admin/apis/${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            }
+        } catch (error) {
+            alert('请求失败');
+        }
+    }
+</script>
+
+</body>
+</html>
