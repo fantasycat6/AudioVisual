@@ -15,6 +15,7 @@ server.log
 # IDE 配置
 .vscode/
 .idea/
+.workbuddy/
 
 # 操作系统文件
 .DS_Store
