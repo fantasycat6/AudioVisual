@@ -76,48 +76,52 @@ function apiKeyOrLoginRequired(req, res, next) {
 }
 
 // 智能解析 API 专用鉴权中间件
-// - 外部API调用（type=json/video）：必须提供正确的api_key，否则返回403
-// - 内部使用（只有video_url，无type）：必须登录才能使用，未登录跳转登录页
+// - 外部API调用（显式指定type=json/video）：必须提供正确的api_key，否则返回403
+// - 内部使用（无type参数）：必须登录才能使用，未登录跳转登录页
 function smartParseAuth(req, res, next) {
-    const { type = 'json', api_key } = req.query;
+    const { type, api_key } = req.query;
     
-    // 判断是否为外部API调用（有type参数且为json或video）
+    // 判断是否为外部API调用（显式指定了type参数且为json或video）
+    // 注意：不再默认type='json'，必须显式指定才算外部调用
     const isExternalApiCall = type === 'json' || type === 'video';
+    
+    // 判断是否为HTML页面请求（内部使用）
+    const isHtmlRequest = req.accepts('html') && !req.headers['x-requested-with'];
     
     if (isExternalApiCall) {
         // 外部API调用：必须有api_key参数
         if (!api_key) {
-            if (type === 'video') {
-                return res.status(403).send(`
-                    <html><body style="background:#111;color:#fff;font-family:sans-serif;
-                    display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-                    <div style="text-align:center;"><h2>❌ 403 Forbidden</h2><p>缺少 API Key 参数</p></div>
-                    </body></html>
-                `);
-            }
-            return res.status(403).json({ 
-                success: false, 
-                error: 'Forbidden', 
-                message: '缺少 API Key 参数' 
-            });
+            // 返回简单的403页面，不暴露具体错误信息
+            return res.status(403).send(`
+                <!DOCTYPE html>
+                <html>
+                <head><title>403 Forbidden</title></head>
+                <body style="background:#111;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+                    <div style="text-align:center;">
+                        <h1 style="font-size:72px;margin:0;">403</h1>
+                        <p style="font-size:18px;">Forbidden</p>
+                    </div>
+                </body>
+                </html>
+            `);
         }
         
         // 验证 API Key
         const user = UserModel.findByApiKey(api_key);
         if (!user) {
-            if (type === 'video') {
-                return res.status(403).send(`
-                    <html><body style="background:#111;color:#fff;font-family:sans-serif;
-                    display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-                    <div style="text-align:center;"><h2>❌ 403 Forbidden</h2><p>无效的 API Key</p></div>
-                    </body></html>
-                `);
-            }
-            return res.status(403).json({ 
-                success: false, 
-                error: 'Forbidden', 
-                message: '无效的 API Key' 
-            });
+            // 返回简单的403页面
+            return res.status(403).send(`
+                <!DOCTYPE html>
+                <html>
+                <head><title>403 Forbidden</title></head>
+                <body style="background:#111;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+                    <div style="text-align:center;">
+                        <h1 style="font-size:72px;margin:0;">403</h1>
+                        <p style="font-size:18px;">Forbidden</p>
+                    </div>
+                </body>
+                </html>
+            `);
         }
         
         req.user = user;
@@ -125,7 +129,7 @@ function smartParseAuth(req, res, next) {
         return next();
     }
     
-    // 内部使用（无type参数或type不是json/video）：必须登录
+    // 内部使用（无type参数）：必须登录
     if (req.session.userId) {
         const user = UserModel.findById(req.session.userId);
         if (user) {
@@ -135,17 +139,9 @@ function smartParseAuth(req, res, next) {
         }
     }
     
-    // 未登录，重定向到登录页
-    if (req.accepts('html')) {
-        const redirectUrl = encodeURIComponent(req.originalUrl);
-        return res.redirect(`/login?next=${redirectUrl}`);
-    }
-    
-    return res.status(401).json({ 
-        success: false, 
-        error: 'Unauthorized', 
-        message: '请先登录' 
-    });
+    // 未登录，重定向到登录页（无论是HTML请求还是AJAX请求都跳转）
+    const redirectUrl = encodeURIComponent(req.originalUrl);
+    return res.redirect(`/login?next=${redirectUrl}`);
 }
 
 // 登录必需中间件
