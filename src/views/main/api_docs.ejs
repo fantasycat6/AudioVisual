@@ -247,23 +247,23 @@ Headers: Authorization: Bearer <span class="string">your_api_key</span>
         
         <h4 style="margin: 20px 0 12px;">请求示例</h4>
         <div class="code-block">
-<span class="comment"># 获取 JSON 响应</span>
-curl "<span class="string">https://your-domain/api/parse/smart?api_key=your_key&video_url=https://v.qq.com/...</span>"
+<span class="comment"># 获取 JSON 响应</span><br/>
+curl "<span class="string">https://your-domain/api/parse/smart?api_key=your_key&video_url=https://v.qq.com/...</span>"<br/>
 
-<span class="comment"># 直接获取视频播放页 HTML</span>
+<span class="comment"># 直接获取视频播放页 HTML</span><br/>
 curl "<span class="string">https://your-domain/api/parse/smart?api_key=your_key&video_url=https://v.qq.com/...&type=video</span>"
         </div>
         
         <h4 style="margin: 20px 0 12px;">响应示例</h4>
         <div class="code-block">
-{
-  <span class="string">"success"</span>: <span class="keyword">true</span>,
-  <span class="string">"message"</span>: <span class="string">"使用 虾米视频解析 解析成功"</span>,
-  <span class="string">"parse_url"</span>: <span class="string">"https://jx.xmflv.com/?url=https%3A%2F%2Fv.qq.com%2F..."</span>,
-  <span class="string">"api_id"</span>: <span class="keyword">1</span>,
-  <span class="string">"api_name"</span>: <span class="string">"虾米视频解析"</span>,
-  <span class="string">"next_api_id"</span>: <span class="keyword">2</span>
-}
+{<br/>
+&nbsp;&nbsp;<span class="string">"success"</span>: <span class="keyword">true</span>,<br/>
+&nbsp;&nbsp;<span class="string">"message"</span>: <span class="string">"使用 虾米视频解析 解析成功"</span>,<br/>
+&nbsp;&nbsp;<span class="string">"parse_url"</span>: <span class="string">"https://jx.xmflv.com/?url=https%3A%2F%2Fv.qq.com%2F..."</span>,<br/>
+&nbsp;&nbsp;<span class="string">"api_id"</span>: <span class="keyword">1</span>,<br/>
+&nbsp;&nbsp;<span class="string">"api_name"</span>: <span class="string">"虾米视频解析"</span>,<br/>
+&nbsp;&nbsp;<span class="string">"next_api_id"</span>: <span class="keyword">2</span><br/>
+}<br/>
         </div>
     </div>
     
