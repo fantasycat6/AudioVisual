@@ -301,13 +301,19 @@
         loadingOverlay.style.display = 'flex';
         
         const apiId = apiSelect.value;
-        let url = `/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}&type=json`;
+        // 内部请求：不带type参数，后端默认按json处理，需要登录
+        let url = `/api/parse/smart?video_url=${encodeURIComponent(videoUrl)}`;
         if (apiId) {
             url += `&api_id=${apiId}`;
         }
         
         try {
             const response = await fetch(url);
+            // 如果未登录，会重定向到登录页
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
             const data = await response.json();
             
             if (data.success && data.parse_url) {

@@ -77,16 +77,13 @@ function apiKeyOrLoginRequired(req, res, next) {
 
 // 智能解析 API 专用鉴权中间件
 // - 外部API调用（显式指定type=json/video）：必须提供正确的api_key，否则返回403
-// - 内部使用（无type参数）：必须登录才能使用，未登录跳转登录页
+// - 内部使用（无type参数或type为空）：默认按json处理，必须登录才能使用，未登录跳转登录页
 function smartParseAuth(req, res, next) {
     const { type, api_key } = req.query;
     
     // 判断是否为外部API调用（显式指定了type参数且为json或video）
-    // 注意：不再默认type='json'，必须显式指定才算外部调用
+    // 内部请求应该不带type参数，或type为空
     const isExternalApiCall = type === 'json' || type === 'video';
-    
-    // 判断是否为HTML页面请求（内部使用）
-    const isHtmlRequest = req.accepts('html') && !req.headers['x-requested-with'];
     
     if (isExternalApiCall) {
         // 外部API调用：必须有api_key参数
@@ -129,17 +126,19 @@ function smartParseAuth(req, res, next) {
         return next();
     }
     
-    // 内部使用（无type参数）：必须登录
+    // 内部使用（无type参数）：默认按json处理，必须登录
     if (req.session.userId) {
         const user = UserModel.findById(req.session.userId);
         if (user) {
             req.user = user;
             req.isApiMode = false;
+            // 设置默认type为json，供后续处理使用
+            req.query.type = 'json';
             return next();
         }
     }
     
-    // 未登录，重定向到登录页（无论是HTML请求还是AJAX请求都跳转）
+    // 未登录，重定向到登录页
     const redirectUrl = encodeURIComponent(req.originalUrl);
     return res.redirect(`/login?next=${redirectUrl}`);
 }
