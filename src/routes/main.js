@@ -5,7 +5,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const { ParseAPI, DramaSite, APICallLog, UserModel } = require('../db');
-const { apiKeyOrLoginRequired, getCurrentUser, formatChinaTime } = require('../middleware/auth');
+const { apiKeyOrLoginRequired, smartParseAuth, getCurrentUser, formatChinaTime } = require('../middleware/auth');
 
 // 首页
 router.get('/', apiKeyOrLoginRequired, (req, res) => {
@@ -53,7 +53,7 @@ router.get('/api/drama-sites', apiKeyOrLoginRequired, (req, res) => {
 });
 
 // 智能解析 API
-router.get('/api/parse/smart', apiKeyOrLoginRequired, async (req, res) => {
+router.get('/api/parse/smart', smartParseAuth, async (req, res) => {
     const { video_url, api_id, max_retries = 3, type = 'json' } = req.query;
 
     if (!video_url) {

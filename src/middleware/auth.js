@@ -75,6 +75,79 @@ function apiKeyOrLoginRequired(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized', message: '请先登录' });
 }
 
+// 智能解析 API 专用鉴权中间件
+// - 外部API调用（type=json/video）：必须提供正确的api_key，否则返回403
+// - 内部使用（只有video_url，无type）：必须登录才能使用，未登录跳转登录页
+function smartParseAuth(req, res, next) {
+    const { type = 'json', api_key } = req.query;
+    
+    // 判断是否为外部API调用（有type参数且为json或video）
+    const isExternalApiCall = type === 'json' || type === 'video';
+    
+    if (isExternalApiCall) {
+        // 外部API调用：必须有api_key参数
+        if (!api_key) {
+            if (type === 'video') {
+                return res.status(403).send(`
+                    <html><body style="background:#111;color:#fff;font-family:sans-serif;
+                    display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+                    <div style="text-align:center;"><h2>❌ 403 Forbidden</h2><p>缺少 API Key 参数</p></div>
+                    </body></html>
+                `);
+            }
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Forbidden', 
+                message: '缺少 API Key 参数' 
+            });
+        }
+        
+        // 验证 API Key
+        const user = UserModel.findByApiKey(api_key);
+        if (!user) {
+            if (type === 'video') {
+                return res.status(403).send(`
+                    <html><body style="background:#111;color:#fff;font-family:sans-serif;
+                    display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+                    <div style="text-align:center;"><h2>❌ 403 Forbidden</h2><p>无效的 API Key</p></div>
+                    </body></html>
+                `);
+            }
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Forbidden', 
+                message: '无效的 API Key' 
+            });
+        }
+        
+        req.user = user;
+        req.isApiMode = true;
+        return next();
+    }
+    
+    // 内部使用（无type参数或type不是json/video）：必须登录
+    if (req.session.userId) {
+        const user = UserModel.findById(req.session.userId);
+        if (user) {
+            req.user = user;
+            req.isApiMode = false;
+            return next();
+        }
+    }
+    
+    // 未登录，重定向到登录页
+    if (req.accepts('html')) {
+        const redirectUrl = encodeURIComponent(req.originalUrl);
+        return res.redirect(`/login?next=${redirectUrl}`);
+    }
+    
+    return res.status(401).json({ 
+        success: false, 
+        error: 'Unauthorized', 
+        message: '请先登录' 
+    });
+}
+
 // 登录必需中间件
 function loginRequired(req, res, next) {
     if (req.session.userId) {
@@ -147,6 +220,7 @@ module.exports = {
     extractApiKey,
     isApiMode,
     apiKeyOrLoginRequired,
+    smartParseAuth,
     loginRequired,
     adminRequired,
     getCurrentUser,
