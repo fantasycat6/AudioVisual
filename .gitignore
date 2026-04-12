@@ -10,7 +10,7 @@ server.log
 .env
 
 # 锁文件（可选，保留 package-lock.json 可以确保依赖版本一致）
-# package-lock.json
+package-lock.json
 
 # IDE 配置
 .vscode/
